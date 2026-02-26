@@ -59,7 +59,7 @@ class ChatController(
 
   private val pendingRuns = mutableSetOf<String>()
   private val pendingRunTimeoutJobs = ConcurrentHashMap<String, Job>()
-  private val pendingRunTimeoutMs = 120_000L
+  private val pendingRunTimeoutMs = 300_000L
 
   private var bootstrapJob: Job? = null
 
