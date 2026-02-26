@@ -401,6 +401,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setAgent(agentId: String?) {
         _uiState.update { it.copy(selectedAgentId = agentId) }
+        if (useNodeChat) {
+            // Agent is determined by sessionKey format: "agent:<agentId>:main"
+            val sessionKey = if (!agentId.isNullOrBlank()) "agent:$agentId:main" else nodeRuntime.chatSessionKey.value
+            nodeRuntime.switchChatSession(sessionKey)
+            nodeRuntime.loadChat(sessionKey)
+        }
     }
 
     private fun getEffectiveAgentId(): String? {
@@ -431,8 +437,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     nodeRuntime.sendChat(
                         message = text,
                         thinking = "low",
-                        attachments = emptyList(),
-                        agentId = getEffectiveAgentId()
+                        attachments = emptyList()
                     )
                 } catch (e: Exception) {
                     pendingNodeChatTts = false

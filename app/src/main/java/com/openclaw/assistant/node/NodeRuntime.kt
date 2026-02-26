@@ -779,8 +779,8 @@ class NodeRuntime(context: Context) {
     chat.abort()
   }
 
-  fun sendChat(message: String, thinking: String, attachments: List<OutgoingAttachment>, agentId: String? = null) {
-    chat.sendMessage(message = message, thinkingLevel = thinking, attachments = attachments, agentId = agentId)
+  fun sendChat(message: String, thinking: String, attachments: List<OutgoingAttachment>) {
+    chat.sendMessage(message = message, thinkingLevel = thinking, attachments = attachments)
   }
 
   private fun handleGatewayEvent(event: String, payloadJson: String?) {
