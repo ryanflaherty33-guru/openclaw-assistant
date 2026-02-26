@@ -85,6 +85,19 @@ class SessionListViewModel(application: Application) : AndroidViewModel(applicat
         settingsRepository.useNodeChat = useNodeChat
     }
 
+    fun renameSession(sessionId: String, newName: String, isGateway: Boolean) {
+        if (isGateway) {
+            viewModelScope.launch {
+                nodeRuntime.patchChatSession(sessionId, newName.trim())
+                nodeRuntime.refreshChatSessions()
+            }
+        } else {
+            viewModelScope.launch {
+                chatRepository.renameSession(sessionId, newName.trim())
+            }
+        }
+    }
+
     fun deleteSession(sessionId: String, isGateway: Boolean) {
         if (isGateway) {
             viewModelScope.launch {

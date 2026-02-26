@@ -45,6 +45,9 @@ interface ChatDao {
     @Query("SELECT * FROM sessions ORDER BY createdAt DESC LIMIT 1")
     suspend fun getLatestSession(): SessionEntity?
 
+    @Query("UPDATE sessions SET title = :title WHERE id = :sessionId")
+    suspend fun updateSessionTitle(sessionId: String, title: String)
+
     // Messages
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: MessageEntity)

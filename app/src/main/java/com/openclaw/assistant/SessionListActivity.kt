@@ -88,6 +88,9 @@ class SessionListActivity : ComponentActivity() {
                     },
                     onDeleteSession = { sessionId, isGateway ->
                         viewModel.deleteSession(sessionId, isGateway)
+                    },
+                    onRenameSession = { sessionId, newName, isGateway ->
+                        viewModel.renameSession(sessionId, newName, isGateway)
                     }
                 )
             }
@@ -109,9 +112,12 @@ fun SessionListScreen(
     onBack: () -> Unit,
     onSessionClick: (SessionUiModel) -> Unit,
     onCreateSession: (String, Boolean) -> Unit,
-    onDeleteSession: (String, Boolean) -> Unit
+    onDeleteSession: (String, Boolean) -> Unit,
+    onRenameSession: (String, String, Boolean) -> Unit = { _, _, _ -> }
 ) {
     var sessionToDelete by remember { mutableStateOf<SessionUiModel?>(null) }
+    var sessionToRename by remember { mutableStateOf<SessionUiModel?>(null) }
+    var sessionActionTarget by remember { mutableStateOf<SessionUiModel?>(null) }
     var showTypeSelectionDialog by remember { mutableStateOf(false) }
     var showNameInputDialog by remember { mutableStateOf(false) }
 
@@ -190,7 +196,7 @@ fun SessionListScreen(
                     SessionListItem(
                         session = session,
                         onClick = { onSessionClick(session) },
-                        onLongClick = { sessionToDelete = session }
+                        onLongClick = { sessionActionTarget = session }
                     )
                 }
             }
@@ -258,6 +264,67 @@ fun SessionListScreen(
     }
 
 
+
+    // Long-press action menu: Rename / Delete
+    sessionActionTarget?.let { session ->
+        AlertDialog(
+            onDismissRequest = { sessionActionTarget = null },
+            title = { Text(session.title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+            text = null,
+            confirmButton = {
+                TextButton(onClick = {
+                    sessionActionTarget = null
+                    sessionToRename = session
+                }) {
+                    Text(stringResource(R.string.rename_session))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    sessionActionTarget = null
+                    sessionToDelete = session
+                }) {
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
+    }
+
+    // Rename dialog
+    sessionToRename?.let { session ->
+        var renameInput by remember(session.id) { mutableStateOf(session.title) }
+        AlertDialog(
+            onDismissRequest = { sessionToRename = null },
+            title = { Text(stringResource(R.string.rename_session_title)) },
+            text = {
+                OutlinedTextField(
+                    value = renameInput,
+                    onValueChange = { renameInput = it },
+                    label = { Text(stringResource(R.string.rename_session_hint)) },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val name = renameInput.trim()
+                        if (name.isNotBlank()) {
+                            onRenameSession(session.id, name, session.isGateway)
+                        }
+                        sessionToRename = null
+                    },
+                    enabled = renameInput.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { sessionToRename = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
     sessionToDelete?.let { session ->
         AlertDialog(

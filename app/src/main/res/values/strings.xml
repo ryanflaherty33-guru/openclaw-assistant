@@ -176,6 +176,10 @@
     <string name="create">Create</string>
     <string name="delete_session_title">Delete conversation?</string>
     <string name="delete_session_message">"%s" will be permanently deleted.</string>
+    <string name="rename_session">Rename</string>
+    <string name="rename_session_title">Rename conversation</string>
+    <string name="rename_session_hint">Conversation name</string>
+    <string name="save">Save</string>
 
     <!-- Operator Offline Warning -->
     <string name="operator_offline_title">Operator Offline / Permission Needed</string>
