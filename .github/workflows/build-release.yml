@@ -65,10 +65,21 @@ jobs:
       - name: Rename Artifacts
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          mv app/build/outputs/apk/standard/release/*.apk app/build/outputs/apk/standard/release/OpenClawAssistant-${{ github.ref_name }}.apk
-          mv app/build/outputs/apk/full/release/*.apk app/build/outputs/apk/full/release/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.apk
-          mv app/build/outputs/bundle/standard/release/*.aab app/build/outputs/bundle/standard/release/OpenClawAssistant-${{ github.ref_name }}.aab
-          mv app/build/outputs/bundle/full/release/*.aab app/build/outputs/bundle/full/release/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.aab
+          set -euo pipefail
+
+          mkdir -p app/build/outputs/release-assets
+
+          STANDARD_APK=$(find app/build/outputs/apk -type f -name "*.apk" | grep -E 'standard.*/release|standardRelease' | head -n1)
+          FULL_APK=$(find app/build/outputs/apk -type f -name "*.apk" | grep -E 'full.*/release|fullRelease' | head -n1)
+          STANDARD_AAB=$(find app/build/outputs/bundle -type f -name "*.aab" | grep -E 'standard.*/release|standardRelease' | head -n1)
+          FULL_AAB=$(find app/build/outputs/bundle -type f -name "*.aab" | grep -E 'full.*/release|fullRelease' | head -n1)
+
+          cp "$STANDARD_APK" app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}.apk
+          cp "$FULL_APK" app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.apk
+          cp "$STANDARD_AAB" app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}.aab
+          cp "$FULL_AAB" app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.aab
+
+          ls -lah app/build/outputs/release-assets
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -77,10 +88,10 @@ jobs:
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            app/build/outputs/apk/standard/release/OpenClawAssistant-${{ github.ref_name }}.apk
-            app/build/outputs/apk/full/release/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.apk
-            app/build/outputs/bundle/standard/release/OpenClawAssistant-${{ github.ref_name }}.aab
-            app/build/outputs/bundle/full/release/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.aab
+            app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}.apk
+            app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.apk
+            app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}.aab
+            app/build/outputs/release-assets/OpenClawAssistant-${{ github.ref_name }}-in-VOICEVOX.aab
           draft: false
           prerelease: false
 
@@ -91,7 +102,9 @@ jobs:
           name: release-artifacts
           path: |
             app/build/outputs/apk/standard/release/*.apk
+            app/build/outputs/apk/standardRelease/*.apk
             app/build/outputs/bundle/standard/release/*.aab
+            app/build/outputs/bundle/standardRelease/*.aab
 
       - name: Upload VOICEVOX Artifacts (Non-tag push)
         uses: actions/upload-artifact@v4
@@ -100,4 +113,6 @@ jobs:
           name: release-artifacts-in-VOICEVOX
           path: |
             app/build/outputs/apk/full/release/*.apk
+            app/build/outputs/apk/fullRelease/*.apk
             app/build/outputs/bundle/full/release/*.aab
+            app/build/outputs/bundle/fullRelease/*.aab
