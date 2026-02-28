@@ -3,6 +3,7 @@ local.properties
 build/
 *.iml
 .idea/
+firebase-debug.log
 
 *.keystore
 **/google-services.json

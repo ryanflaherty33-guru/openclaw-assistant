@@ -107,7 +107,7 @@
     <string name="wake_word">Wake Word</string>
     <string name="voice_output">Voice Output</string>
     <string name="voice_speed">Voice Speed</string>
-    <string name="voice_speed_range">Range: %s - %s</string>
+    <string name="voice_speed_range">Range: %1$s - %2$s</string>
     <string name="tts_engine_label">TTS Engine</string>
     <string name="tts_engine_auto">Auto (Default)</string>
     <string name="tts_provider_label">TTS Provider</string>

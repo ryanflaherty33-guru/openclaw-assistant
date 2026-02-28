@@ -10,10 +10,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class DeviceHandlerTest {
 
-  private val context = mockk<Context>(relaxed = true)
+  private val context: Context = RuntimeEnvironment.getApplication()
   private val prefs = mockk<SecurePrefs>()
 
   private val handler = DeviceHandler(appContext = context, prefs = prefs)

@@ -17,6 +17,7 @@ class InvokeDispatcherTest {
   private val a2uiHandler = mockk<A2UIHandler>()
   private val debugHandler = mockk<DebugHandler>()
   private val appUpdateHandler = mockk<AppUpdateHandler>()
+  private val deviceHandler = mockk<DeviceHandler>()
 
   private fun createDispatcher(
     isForeground: Boolean = true,
@@ -31,6 +32,7 @@ class InvokeDispatcherTest {
     a2uiHandler = a2uiHandler,
     debugHandler = debugHandler,
     appUpdateHandler = appUpdateHandler,
+    deviceHandler = deviceHandler,
     isForeground = { isForeground },
     cameraEnabled = { cameraEnabled },
     locationEnabled = { locationEnabled }
