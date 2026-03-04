@@ -16,4 +16,28 @@ class SmsHandler(
       return GatewaySession.InvokeResult.error(code = code, message = error)
     }
   }
+
+  suspend fun handleSmsReadLatest(): GatewaySession.InvokeResult {
+    val res = sms.readLatest()
+    if (res.ok) {
+      return GatewaySession.InvokeResult.ok(res.payloadJson)
+    } else {
+      val error = res.error ?: "SMS_READ_FAILED"
+      val idx = error.indexOf(':')
+      val code = if (idx > 0) error.substring(0, idx).trim() else "SMS_READ_FAILED"
+      return GatewaySession.InvokeResult.error(code = code, message = error)
+    }
+  }
+
+  suspend fun handleSmsReadUnread(): GatewaySession.InvokeResult {
+    val res = sms.readUnread()
+    if (res.ok) {
+      return GatewaySession.InvokeResult.ok(res.payloadJson)
+    } else {
+      val error = res.error ?: "SMS_READ_FAILED"
+      val idx = error.indexOf(':')
+      val code = if (idx > 0) error.substring(0, idx).trim() else "SMS_READ_FAILED"
+      return GatewaySession.InvokeResult.error(code = code, message = error)
+    }
+  }
 }

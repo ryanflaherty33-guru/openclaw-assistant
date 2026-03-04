@@ -58,7 +58,7 @@ data class ChatUiState(
     val isNodeChatMode: Boolean = false,
     val pendingGatewayTrust: com.openclaw.assistant.node.NodeRuntime.GatewayTrustPrompt? = null,
     val displayName: String = "",
-    val attachments: List<PendingFileAttachment> = emptyList()
+    val attachments: List<PendingFileAttachment> = emptyList(),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -425,6 +425,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun declineGatewayTrust() {
         nodeRuntime.declineGatewayTrustPrompt()
     }
+
+
 
     fun setAgent(agentId: String?) {
         Log.d("AgentDbg", "setAgent: agentId=$agentId useNodeChat=$useNodeChat")

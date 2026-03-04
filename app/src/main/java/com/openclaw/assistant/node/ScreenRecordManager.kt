@@ -18,6 +18,11 @@ class ScreenRecordManager(private val context: Context) {
 
   @Volatile private var screenCaptureRequester: ScreenCaptureRequester? = null
   @Volatile private var permissionRequester: com.openclaw.assistant.PermissionRequester? = null
+  @Volatile private var stopSignal: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+  fun stopRecording() {
+    stopSignal?.complete(Unit)
+  }
 
   fun attachScreenCaptureRequester(requester: ScreenCaptureRequester) {
     screenCaptureRequester = requester
@@ -101,7 +106,15 @@ class ScreenRecordManager(private val context: Context) {
           )
 
         recorder.start()
-        delay(durationMs.toLong())
+        val signal = kotlinx.coroutines.CompletableDeferred<Unit>()
+        stopSignal = signal
+        try {
+          kotlinx.coroutines.withTimeoutOrNull(durationMs.toLong()) {
+            signal.await()
+          }
+        } finally {
+          stopSignal = null
+        }
       } finally {
         try {
           recorder.stop()

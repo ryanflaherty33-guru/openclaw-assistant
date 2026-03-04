@@ -89,6 +89,14 @@ class NotificationsHandler(
                     GatewaySession.InvokeResult.error("ACTION_FAILED", "Failed to dismiss: ${e.message}")
                 }
             }
+            "dismiss_all" -> {
+                try {
+                    service.cancelAllNotifications()
+                    GatewaySession.InvokeResult.ok("""{"ok":true}""")
+                } catch (e: Exception) {
+                    GatewaySession.InvokeResult.error("ACTION_FAILED", "Failed to dismiss all: ${e.message}")
+                }
+            }
             "open" -> {
                 val sbn = notificationManager.getNotification(key)
                 if (sbn != null) {

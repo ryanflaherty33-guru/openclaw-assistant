@@ -808,6 +808,7 @@ fun PreparingSpeechIndicator() {
     }
 }
 
+
 @Composable
 fun PendingToolsIndicator(toolCalls: List<String>) {
     Box(

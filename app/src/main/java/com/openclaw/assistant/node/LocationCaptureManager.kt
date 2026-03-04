@@ -61,6 +61,36 @@ class LocationCaptureManager(private val context: Context) {
       )
     }
 
+  suspend fun getLastKnownLocation(): Payload? =
+    withContext(Dispatchers.Main) {
+      val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+      val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+      val cached = bestLastKnown(manager, providers, null) ?: return@withContext null
+
+      val timestamp = DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(cached.time))
+      val source = cached.provider
+      val altitudeMeters = if (cached.hasAltitude()) cached.altitude else null
+      val speedMps = if (cached.hasSpeed()) cached.speed.toDouble() else null
+      val headingDeg = if (cached.hasBearing()) cached.bearing.toDouble() else null
+      Payload(
+        buildString {
+          append("{\"lat\":")
+          append(cached.latitude)
+          append(",\"lon\":")
+          append(cached.longitude)
+          append(",\"accuracyMeters\":")
+          append(cached.accuracy.toDouble())
+          if (altitudeMeters != null) append(",\"altitudeMeters\":").append(altitudeMeters)
+          if (speedMps != null) append(",\"speedMps\":").append(speedMps)
+          if (headingDeg != null) append(",\"headingDeg\":").append(headingDeg)
+          append(",\"timestamp\":\"").append(timestamp).append('"')
+          append(",\"isPrecise\":").append(false)
+          append(",\"source\":\"").append(source).append('"')
+          append('}')
+        },
+      )
+    }
+
   private fun bestLastKnown(
     manager: LocationManager,
     providers: List<String>,

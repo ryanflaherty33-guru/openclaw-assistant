@@ -13,6 +13,9 @@ enum class OpenClawCapability(val rawValue: String) {
     Contacts("contacts"),
     Calendar("calendar"),
     Motion("motion"),
+    Wifi("wifi"),
+    App("app"),
+    Clipboard("clipboard"),
 }
 
 enum class OpenClawCanvasCommand(val rawValue: String) {
@@ -61,6 +64,8 @@ enum class OpenClawScreenCommand(val rawValue: String) {
 
 enum class OpenClawSmsCommand(val rawValue: String) {
     Send("sms.send"),
+    ReadLatest("sms.read_latest"),
+    ReadUnread("sms.read_unread"),
     ;
 
     companion object {
@@ -82,6 +87,9 @@ enum class OpenClawDeviceCommand(val rawValue: String) {
 
 enum class OpenClawLocationCommand(val rawValue: String) {
     Get("location.get"),
+    History("location.history"),
+    LastKnown("location.last_known"),
+    SetTracking("location.set_tracking"),
     ;
 
     companion object {
@@ -101,6 +109,8 @@ enum class OpenClawNotificationsCommand(val rawValue: String) {
 
 enum class OpenClawSystemCommand(val rawValue: String) {
     Notify("system.notify"),
+    Volume("system.volume"),
+    Brightness("system.brightness"),
     ;
 
     companion object {
@@ -120,6 +130,8 @@ enum class OpenClawPhotosCommand(val rawValue: String) {
 enum class OpenClawContactsCommand(val rawValue: String) {
     Search("contacts.search"),
     Add("contacts.add"),
+    Update("contacts.update"),
+    Delete("contacts.delete"),
     ;
 
     companion object {
@@ -130,6 +142,8 @@ enum class OpenClawContactsCommand(val rawValue: String) {
 enum class OpenClawCalendarCommand(val rawValue: String) {
     Events("calendar.events"),
     Add("calendar.add"),
+    Update("calendar.update"),
+    Delete("calendar.delete"),
     ;
 
     companion object {
@@ -144,5 +158,47 @@ enum class OpenClawMotionCommand(val rawValue: String) {
 
     companion object {
         const val NamespacePrefix: String = "motion."
+    }
+}
+
+enum class OpenClawWifiCommand(val rawValue: String) {
+    List("wifi.list"),
+    Status("wifi.status"),
+    Connect("wifi.connect"),
+    ;
+
+    companion object {
+        const val NamespacePrefix: String = "wifi."
+    }
+}
+
+enum class OpenClawAppCommand(val rawValue: String) {
+    List("app.list"),
+    Launch("app.launch"),
+    ;
+
+    companion object {
+        const val NamespacePrefix: String = "app."
+    }
+}
+
+enum class OpenClawClipboardCommand(val rawValue: String) {
+    Read("clipboard.read"),
+    Write("clipboard.write"),
+    ;
+
+    companion object {
+        const val NamespacePrefix: String = "clipboard."
+    }
+}
+
+enum class OpenClawVoiceWakeCommand(val rawValue: String) {
+    GetMode("voiceWake.get_mode"),
+    SetMode("voiceWake.set_mode"),
+    Status("voiceWake.status"),
+    ;
+
+    companion object {
+        const val NamespacePrefix: String = "voiceWake."
     }
 }

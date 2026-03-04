@@ -14,6 +14,10 @@ import com.openclaw.assistant.protocol.OpenClawPhotosCommand
 import com.openclaw.assistant.protocol.OpenClawContactsCommand
 import com.openclaw.assistant.protocol.OpenClawCalendarCommand
 import com.openclaw.assistant.protocol.OpenClawMotionCommand
+import com.openclaw.assistant.protocol.OpenClawWifiCommand
+import com.openclaw.assistant.protocol.OpenClawAppCommand
+import com.openclaw.assistant.protocol.OpenClawClipboardCommand
+import com.openclaw.assistant.protocol.OpenClawVoiceWakeCommand
 
 class InvokeDispatcher(
   private val canvas: CanvasController,
@@ -27,6 +31,10 @@ class InvokeDispatcher(
   private val contactsHandler: ContactsHandler,
   private val calendarHandler: CalendarHandler,
   private val motionHandler: MotionHandler,
+  private val wifiHandler: WifiHandler,
+  private val clipboardHandler: ClipboardHandler,
+  private val appHandler: AppHandler,
+  private val voiceWakeHandler: VoiceWakeHandler,
   private val a2uiHandler: A2UIHandler,
   private val debugHandler: DebugHandler,
   private val appUpdateHandler: AppUpdateHandler,
@@ -167,12 +175,17 @@ class InvokeDispatcher(
 
       // Location command
       OpenClawLocationCommand.Get.rawValue -> locationHandler.handleLocationGet(paramsJson)
+      OpenClawLocationCommand.History.rawValue -> locationHandler.handleLocationHistory(paramsJson)
+      OpenClawLocationCommand.LastKnown.rawValue -> locationHandler.handleLocationLastKnown(paramsJson)
+      OpenClawLocationCommand.SetTracking.rawValue -> locationHandler.handleLocationSetTracking(paramsJson)
 
       // Screen command
       OpenClawScreenCommand.Record.rawValue -> screenHandler.handleScreenRecord(paramsJson)
 
       // SMS command
       OpenClawSmsCommand.Send.rawValue -> smsHandler.handleSmsSend(paramsJson)
+      OpenClawSmsCommand.ReadLatest.rawValue -> smsHandler.handleSmsReadLatest()
+      OpenClawSmsCommand.ReadUnread.rawValue -> smsHandler.handleSmsReadUnread()
 
       // Notifications commands
       OpenClawNotificationsCommand.List.rawValue -> notificationsHandler.handleList()
@@ -180,6 +193,8 @@ class InvokeDispatcher(
 
       // System command
       OpenClawSystemCommand.Notify.rawValue -> systemHandler.handleNotify(paramsJson)
+      OpenClawSystemCommand.Volume.rawValue -> systemHandler.handleVolume(paramsJson)
+      OpenClawSystemCommand.Brightness.rawValue -> systemHandler.handleBrightness(paramsJson)
 
       // Photos command
       OpenClawPhotosCommand.Latest.rawValue -> photosHandler.handleLatest()
@@ -187,14 +202,36 @@ class InvokeDispatcher(
       // Contacts commands
       OpenClawContactsCommand.Search.rawValue -> contactsHandler.handleSearch(paramsJson)
       OpenClawContactsCommand.Add.rawValue -> contactsHandler.handleAdd(paramsJson)
+      OpenClawContactsCommand.Update.rawValue -> contactsHandler.handleUpdate(paramsJson)
+      OpenClawContactsCommand.Delete.rawValue -> contactsHandler.handleDelete(paramsJson)
 
       // Calendar commands
       OpenClawCalendarCommand.Events.rawValue -> calendarHandler.handleEvents(paramsJson)
       OpenClawCalendarCommand.Add.rawValue -> calendarHandler.handleAdd(paramsJson)
+      OpenClawCalendarCommand.Update.rawValue -> calendarHandler.handleUpdate(paramsJson)
+      OpenClawCalendarCommand.Delete.rawValue -> calendarHandler.handleDelete(paramsJson)
 
       // Motion commands
       OpenClawMotionCommand.Activity.rawValue -> motionHandler.handleActivity()
       OpenClawMotionCommand.Pedometer.rawValue -> motionHandler.handlePedometer()
+
+      // Wifi commands
+      OpenClawWifiCommand.List.rawValue -> wifiHandler.handleWifiList()
+      OpenClawWifiCommand.Status.rawValue -> wifiHandler.handleWifiStatus()
+      OpenClawWifiCommand.Connect.rawValue -> wifiHandler.handleWifiConnect(paramsJson)
+
+      // App commands
+      OpenClawAppCommand.List.rawValue -> appHandler.handleAppList()
+      OpenClawAppCommand.Launch.rawValue -> appHandler.handleAppLaunch(paramsJson)
+
+      // Clipboard commands
+      OpenClawClipboardCommand.Read.rawValue -> clipboardHandler.handleClipboardRead()
+      OpenClawClipboardCommand.Write.rawValue -> clipboardHandler.handleClipboardWrite(paramsJson)
+
+      // VoiceWake commands
+      OpenClawVoiceWakeCommand.GetMode.rawValue -> voiceWakeHandler.handleVoiceWakeGetMode()
+      OpenClawVoiceWakeCommand.SetMode.rawValue -> voiceWakeHandler.handleVoiceWakeSetMode(paramsJson)
+      OpenClawVoiceWakeCommand.Status.rawValue -> voiceWakeHandler.handleVoiceWakeStatus()
 
       // Device commands
       OpenClawDeviceCommand.Status.rawValue -> deviceHandler.handleStatus()

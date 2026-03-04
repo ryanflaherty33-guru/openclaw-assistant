@@ -160,6 +160,34 @@ class NodeRuntime(context: Context) {
     getOperatorCanvasHostUrl = { operatorSession.currentCanvasHostUrl() },
   )
 
+  private val wifiHandler = WifiHandler(
+    context = appContext,
+    json = json,
+    invokeErrorFromThrowable = { invokeErrorFromThrowable(it) },
+  )
+
+  private val clipboardHandler = ClipboardHandler(
+    context = appContext,
+    json = json,
+    invokeErrorFromThrowable = { invokeErrorFromThrowable(it) },
+  )
+
+  private val appHandler = AppHandler(
+    context = appContext,
+    json = json,
+    invokeErrorFromThrowable = { invokeErrorFromThrowable(it) },
+  )
+
+  private val voiceWakeHandler = VoiceWakeHandler(
+    json = json,
+    voiceWakeMode = { prefs.voiceWakeMode.value },
+    setVoiceWakeMode = { mode -> 
+      prefs.setVoiceWakeMode(mode)
+    },
+    voiceWakeStatusText = { voiceWakeStatusText.value },
+    invokeErrorFromThrowable = { invokeErrorFromThrowable(it) },
+  )
+
   private val connectionManager: ConnectionManager = ConnectionManager(
     prefs = prefs,
     appContext = appContext,
@@ -184,6 +212,10 @@ class NodeRuntime(context: Context) {
     contactsHandler = contactsHandler,
     calendarHandler = calendarHandler,
     motionHandler = motionHandler,
+    wifiHandler = wifiHandler,
+    clipboardHandler = clipboardHandler,
+    appHandler = appHandler,
+    voiceWakeHandler = voiceWakeHandler,
     a2uiHandler = a2uiHandler,
     debugHandler = debugHandler,
     appUpdateHandler = appUpdateHandler,
@@ -446,7 +478,9 @@ class NodeRuntime(context: Context) {
         externalAudioCaptureActive,
         wakeWords,
         chatMicActive,
-      ) { mode, foreground, externalAudio, words, chatMic -> Quint(mode, foreground, externalAudio, words, chatMic) }
+      ) { mode: VoiceWakeMode, foreground: Boolean, externalAudio: Boolean, words: List<String>, chatMic: Boolean -> 
+        Quint(mode, foreground, externalAudio, words, chatMic) 
+      }
         .distinctUntilChanged()
         .collect { (mode, foreground, externalAudio, words, chatMic) ->
           val shouldListen =
@@ -602,6 +636,10 @@ class NodeRuntime(context: Context) {
 
   fun setScreenRecordActive(value: Boolean) {
     _screenRecordActive.value = value
+  }
+
+  fun stopScreenRecording() {
+    screenRecorder.stopRecording()
   }
 
   suspend fun refreshWakeWordsFromGateway() {

@@ -11,6 +11,8 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.booleanOrNull
 
 class LocationHandler(
   private val appContext: Context,
@@ -95,13 +97,60 @@ class LocationHandler(
     }
   }
 
+  suspend fun handleLocationHistory(paramsJson: String?): GatewaySession.InvokeResult {
+    // Requires implementation of background location tracking and local storage
+    return GatewaySession.InvokeResult.error(
+        code = "UNIMPLEMENTED",
+        message = "UNIMPLEMENTED: Location history tracking is not fully implemented yet."
+    )
+  }
+
+  suspend fun handleLocationLastKnown(paramsJson: String?): GatewaySession.InvokeResult {
+    if (!hasFineLocationPermission() && !hasCoarseLocationPermission()) {
+      return GatewaySession.InvokeResult.error(
+        code = "LOCATION_PERMISSION_REQUIRED",
+        message = "LOCATION_PERMISSION_REQUIRED: grant Location permission",
+      )
+    }
+    
+    try {
+        val payload = location.getLastKnownLocation()
+        if (payload != null) {
+            return GatewaySession.InvokeResult.ok(payload.payloadJson)
+        } else {
+             return GatewaySession.InvokeResult.error(
+                code = "LOCATION_UNAVAILABLE",
+                message = "LOCATION_UNAVAILABLE: No last known location found.",
+             )
+        }
+    } catch (err: Throwable) {
+        return GatewaySession.InvokeResult.error(
+            code = "LOCATION_ERROR",
+            message = err.message ?: "Unknown error retrieving last known location."
+        )
+    }
+  }
+
+  suspend fun handleLocationSetTracking(paramsJson: String?): GatewaySession.InvokeResult {
+    val enabled = try {
+        paramsJson?.let { json.parseToJsonElement(it).jsonObject["enabled"]?.let { el -> (el as? JsonPrimitive)?.booleanOrNull } }
+    } catch (_: Exception) { null }
+    
+    if (enabled == null) {
+        return GatewaySession.InvokeResult.error("INVALID_ARGUMENT", "Missing 'enabled' boolean parameter.")
+    }
+    
+    // In a real implementation, this would start/stop a Foreground Service for location updates
+    return GatewaySession.InvokeResult.ok("""{"enabled":$enabled,"note":"This feature is simulated in the current version."}""")
+  }
+
   private fun parseLocationParams(paramsJson: String?): Triple<Long?, Long, String?> {
     if (paramsJson.isNullOrBlank()) {
       return Triple(null, 10_000L, null)
     }
     val root =
       try {
-        json.parseToJsonElement(paramsJson).asObjectOrNull()
+        json.parseToJsonElement(paramsJson).jsonObject
       } catch (_: Throwable) {
         null
       }

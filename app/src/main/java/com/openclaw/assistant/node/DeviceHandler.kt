@@ -31,14 +31,21 @@ class DeviceHandler(
     val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
     val level = if (rawLevel != -1 && scale > 0) (rawLevel * 100 / scale.toFloat()).toInt() else -1
     val status = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+    val plugged = batteryIntent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
     val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
         status == BatteryManager.BATTERY_STATUS_FULL
+    val temperature = batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) ?: -1
+    val voltage = batteryIntent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) ?: -1
 
     val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as PowerManager
 
     val payload = buildJsonObject {
       put("batteryLevel", JsonPrimitive(level))
       put("charging", JsonPrimitive(isCharging))
+      put("plugged", JsonPrimitive(plugged))
+      put("status", JsonPrimitive(status))
+      put("temperature", JsonPrimitive(temperature / 10.0)) // Celsius
+      put("voltage", JsonPrimitive(voltage))
       put("screenInteractive", JsonPrimitive(powerManager.isInteractive))
       put("voiceWakeMode", JsonPrimitive(prefs.voiceWakeMode.value.rawValue))
       put("locationMode", JsonPrimitive(prefs.locationMode.value.rawValue))

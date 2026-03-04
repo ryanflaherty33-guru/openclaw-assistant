@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.telephony.SmsManager as AndroidSmsManager
+import android.net.Uri
+import android.provider.Telephony
 import androidx.core.content.ContextCompat
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -14,8 +16,8 @@ import kotlinx.serialization.encodeToString
 import com.openclaw.assistant.PermissionRequester
 
 /**
- * Sends SMS messages via the Android SMS API.
- * Requires SEND_SMS permission to be granted.
+ * Sends and reads SMS messages via the Android SMS API and Telephony provider.
+ * Requires SEND_SMS and READ_SMS permissions to be granted.
  */
 class SmsManager(private val context: Context) {
 
@@ -28,6 +30,20 @@ class SmsManager(private val context: Context) {
         val message: String?,
         val error: String? = null,
         val payloadJson: String,
+    )
+
+    data class ReadResult(
+        val ok: Boolean,
+        val messages: List<SmsMessageData> = emptyList(),
+        val error: String? = null,
+        val payloadJson: String
+    )
+
+    data class SmsMessageData(
+        val address: String,
+        val body: String,
+        val date: Long,
+        val isRead: Boolean
     )
 
     internal data class ParsedParams(
@@ -121,6 +137,13 @@ class SmsManager(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    fun hasReadSmsPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_SMS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     fun canSendSms(): Boolean {
         return hasSmsPermission() && hasTelephonyFeature()
     }
@@ -208,6 +231,73 @@ class SmsManager(private val context: Context) {
         return results[Manifest.permission.SEND_SMS] == true
     }
 
+    private suspend fun ensureReadSmsPermission(): Boolean {
+        if (hasReadSmsPermission()) return true
+        val requester = permissionRequester ?: return false
+        val results = requester.requestIfMissing(listOf(Manifest.permission.READ_SMS))
+        return results[Manifest.permission.READ_SMS] == true
+    }
+
+    suspend fun readLatest(limit: Int = 3): ReadResult {
+        return readMessages(limit = limit, unreadOnly = false)
+    }
+
+    suspend fun readUnread(limit: Int = 10): ReadResult {
+        return readMessages(limit = limit, unreadOnly = true)
+    }
+
+    private suspend fun readMessages(limit: Int, unreadOnly: Boolean): ReadResult {
+        if (!hasTelephonyFeature()) {
+            return errorReadResult("SMS_UNAVAILABLE: telephony not available")
+        }
+        if (!ensureReadSmsPermission()) {
+            return errorReadResult("SMS_PERMISSION_REQUIRED: grant READ_SMS permission")
+        }
+
+        try {
+            val messages = mutableListOf<SmsMessageData>()
+            val uri = Telephony.Sms.Inbox.CONTENT_URI
+            val projection = arrayOf(
+                Telephony.Sms.ADDRESS,
+                Telephony.Sms.BODY,
+                Telephony.Sms.DATE,
+                Telephony.Sms.READ
+            )
+            val selection = if (unreadOnly) "${Telephony.Sms.READ} = 0" else null
+            val sortOrder = "${Telephony.Sms.DATE} DESC LIMIT $limit"
+
+            context.contentResolver.query(uri, projection, selection, null, sortOrder)?.use { cursor ->
+                val addressIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS)
+                val bodyIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.BODY)
+                val dateIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.DATE)
+                val readIdx = cursor.getColumnIndexOrThrow(Telephony.Sms.READ)
+
+                while (cursor.moveToNext()) {
+                    messages.add(
+                        SmsMessageData(
+                            address = cursor.getString(addressIdx) ?: "",
+                            body = cursor.getString(bodyIdx) ?: "",
+                            date = cursor.getLong(dateIdx),
+                            isRead = cursor.getInt(readIdx) == 1
+                        )
+                    )
+                }
+            }
+
+            val messagesJson = messages.joinToString(",") { msg ->
+                val escapedBody = msg.body.replace("\"", "\\\"").replace("\n", "\\n")
+                val escapedAddress = msg.address.replace("\"", "\\\"").replace("\n", "\\n")
+                """{"address":"$escapedAddress","body":"$escapedBody","date":${msg.date},"isRead":${msg.isRead}}"""
+            }
+            val payload = """{"messages":[$messagesJson]}"""
+            return ReadResult(ok = true, messages = messages, payloadJson = payload)
+        } catch (e: SecurityException) {
+            return errorReadResult("SMS_PERMISSION_REQUIRED: ${e.message}")
+        } catch (e: Exception) {
+            return errorReadResult("SMS_READ_FAILED: ${e.message ?: "unknown error"}")
+        }
+    }
+
     private fun okResult(to: String, message: String): SendResult {
         return SendResult(
             ok = true,
@@ -226,5 +316,10 @@ class SmsManager(private val context: Context) {
             error = error,
             payloadJson = buildPayloadJson(json = json, ok = false, to = to, error = error),
         )
+    }
+
+    private fun errorReadResult(error: String): ReadResult {
+        val payload = """{"error":"$error"}"""
+        return ReadResult(ok = false, error = error, payloadJson = payload)
     }
 }

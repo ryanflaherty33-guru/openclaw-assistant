@@ -172,4 +172,92 @@ class ContactsHandler(private val appContext: Context) {
             GatewaySession.InvokeResult.error("CONTACTS_ADD_FAILED", "CONTACTS_ADD_FAILED: ${e.message}")
         }
     }
+
+    suspend fun handleUpdate(paramsJson: String?): GatewaySession.InvokeResult {
+        if (!ensureWritePermission()) {
+            return GatewaySession.InvokeResult.error(
+                code = "CONTACTS_WRITE_PERMISSION_REQUIRED",
+                message = "CONTACTS_WRITE_PERMISSION_REQUIRED: grant Contacts write permission"
+            )
+        }
+
+        val params = paramsJson?.let {
+            try {
+                json.parseToJsonElement(it).jsonObject
+            } catch (e: Exception) {
+                null
+            }
+        } ?: return GatewaySession.InvokeResult.error("INVALID_REQUEST", "Expected JSON object")
+
+        val id = (params["id"] as? JsonPrimitive)?.content?.toLongOrNull()
+        if (id == null) {
+            return GatewaySession.InvokeResult.error("INVALID_REQUEST", "Valid contact ID is required")
+        }
+
+        val name = (params["name"] as? JsonPrimitive)?.content
+        val number = (params["number"] as? JsonPrimitive)?.content
+
+        if (name.isNullOrEmpty() && number.isNullOrEmpty()) {
+            return GatewaySession.InvokeResult.error("INVALID_REQUEST", "Either name or number is required for update")
+        }
+
+        val ops = ArrayList<ContentProviderOperation>()
+
+        if (!name.isNullOrEmpty()) {
+            ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                .withSelection("${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                    arrayOf(id.toString(), ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE))
+                .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+                .build())
+        }
+
+        if (!number.isNullOrEmpty()) {
+            ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                .withSelection("${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                    arrayOf(id.toString(), ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE))
+                .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
+                .build())
+        }
+
+        return try {
+            appContext.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+            GatewaySession.InvokeResult.ok("""{"ok":true}""")
+        } catch (e: Exception) {
+            GatewaySession.InvokeResult.error("CONTACTS_UPDATE_FAILED", "CONTACTS_UPDATE_FAILED: ${e.message}")
+        }
+    }
+
+    suspend fun handleDelete(paramsJson: String?): GatewaySession.InvokeResult {
+        if (!ensureWritePermission()) {
+            return GatewaySession.InvokeResult.error(
+                code = "CONTACTS_WRITE_PERMISSION_REQUIRED",
+                message = "CONTACTS_WRITE_PERMISSION_REQUIRED: grant Contacts write permission"
+            )
+        }
+
+        val params = paramsJson?.let {
+            try {
+                json.parseToJsonElement(it).jsonObject
+            } catch (e: Exception) {
+                null
+            }
+        } ?: return GatewaySession.InvokeResult.error("INVALID_REQUEST", "Expected JSON object")
+
+        val id = (params["id"] as? JsonPrimitive)?.content?.toLongOrNull()
+        if (id == null) {
+            return GatewaySession.InvokeResult.error("INVALID_REQUEST", "Valid contact ID is required")
+        }
+
+        val ops = ArrayList<ContentProviderOperation>()
+        ops.add(ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI)
+            .withSelection("${ContactsContract.RawContacts.CONTACT_ID}=?", arrayOf(id.toString()))
+            .build())
+
+        return try {
+            appContext.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+            GatewaySession.InvokeResult.ok("""{"ok":true}""")
+        } catch (e: Exception) {
+            GatewaySession.InvokeResult.error("CONTACTS_DELETE_FAILED", "CONTACTS_DELETE_FAILED: ${e.message}")
+        }
+    }
 }
