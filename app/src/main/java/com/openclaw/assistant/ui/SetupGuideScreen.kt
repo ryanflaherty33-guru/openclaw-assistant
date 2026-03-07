@@ -3,6 +3,8 @@ package com.openclaw.assistant.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -430,14 +432,24 @@ private fun ConnectionStep(
 @Composable
 private fun PermissionsStep(onNext: () -> Unit) {
     val context = LocalContext.current
-    val permissions = remember {
+    val motionAvailable = remember(context) { hasMotionCapabilities(context) }
+    val smsAvailable = remember(context) {
+        context.packageManager?.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) == true
+    }
+
+    val permissions = remember(motionAvailable, smsAvailable) {
         mutableListOf(
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.CAMERA,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.SEND_SMS
         ).apply {
+            if (smsAvailable) {
+                add(Manifest.permission.SEND_SMS)
+            }
+            if (motionAvailable) {
+                add(Manifest.permission.ACTIVITY_RECOGNITION)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 add(Manifest.permission.POST_NOTIFICATIONS)
             }
@@ -489,6 +501,24 @@ private fun PermissionsStep(onNext: () -> Unit) {
             desc = stringResource(R.string.permission_location_desc),
             isGranted = permissionsStatus[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissionsStatus[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         )
+        if (smsAvailable) {
+            PermissionItem(
+                icon = Icons.Default.Sms,
+                name = stringResource(R.string.capability_sms),
+                desc = stringResource(R.string.permission_send_sms_desc),
+                isGranted = permissionsStatus[Manifest.permission.SEND_SMS] == true
+            )
+        }
+
+        if (motionAvailable) {
+            PermissionItem(
+                icon = Icons.Default.DirectionsRun,
+                name = stringResource(R.string.capability_motion),
+                desc = stringResource(R.string.permission_motion_desc),
+                isGranted = permissionsStatus[Manifest.permission.ACTIVITY_RECOGNITION] == true
+            )
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionItem(
                 icon = Icons.Default.Notifications,
@@ -605,6 +635,11 @@ private fun FinalCheckStep(
         if (isPairingRequired) pairingDetected = true
     }
 
+    val motionAvailable = remember(context) { hasMotionCapabilities(context) }
+    val smsAvailable = remember(context) {
+        context.packageManager?.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) == true
+    }
+
     val gatewayUrl = remember(manualHost, manualPort, manualTls) {
         "${if (manualTls) "https" else "http"}://$manualHost:$manualPort"
     }
@@ -663,6 +698,23 @@ private fun FinalCheckStep(
                 )
                 Text(
                     text = authLabel,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.capabilities_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(72.dp)
+                )
+                val caps = mutableListOf<String>().apply {
+                    if (smsAvailable) add(stringResource(R.string.capability_sms))
+                    if (motionAvailable) add(stringResource(R.string.capability_motion))
+                }
+                Text(
+                    text = if (caps.isEmpty()) stringResource(R.string.none) else caps.joinToString(", "),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -780,6 +832,12 @@ private fun PairingGuideBlock(deviceId: String?) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+private fun hasMotionCapabilities(context: Context): Boolean {
+    val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    return sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null ||
+            sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null
 }
 
 @OptIn(ExperimentalFoundationApi::class)

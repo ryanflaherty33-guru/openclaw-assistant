@@ -316,6 +316,7 @@
     <string name="capability_location">Location</string>
     <string name="diagnostics_title">Diagnostics</string>
     <string name="setup_required_hint">Please configure connection in Settings</string>
+    <string name="none">None</string>
 
     <!-- Gateway Settings -->
     <string name="settings_gateway_title">Gateway Connection</string>
@@ -349,6 +350,7 @@
 
     <!-- Capability Cards (SMS & Screen) -->
     <string name="capability_sms">SMS</string>
+    <string name="capability_motion">Motion</string>
     <string name="capability_screen">Screen</string>
     <string name="capability_on">On</string>
     <string name="capability_off">Off</string>
@@ -365,6 +367,9 @@
     <!-- SMS Permission -->
     <string name="permission_send_sms">SMS</string>
     <string name="permission_send_sms_desc">Required for the AI to send text messages</string>
+
+    <!-- Motion Permission -->
+    <string name="permission_motion_desc">Required for step counting and motion detection</string>
 
     <!-- Canvas Debug Mode -->
     <string name="canvas_debug_mode">Canvas Debug Overlay</string>

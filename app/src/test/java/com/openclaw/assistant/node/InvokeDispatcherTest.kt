@@ -27,6 +27,10 @@ class InvokeDispatcherTest {
   private val contactsHandler = mockk<ContactsHandler>()
   private val calendarHandler = mockk<CalendarHandler>()
   private val motionHandler = mockk<MotionHandler>()
+  private val wifiHandler = mockk<WifiHandler>()
+  private val clipboardHandler = mockk<ClipboardHandler>()
+  private val appHandler = mockk<AppHandler>()
+  private val voiceWakeHandler = mockk<VoiceWakeHandler>()
   private val a2uiHandler = mockk<A2UIHandler>()
   private val debugHandler = mockk<DebugHandler>()
   private val appUpdateHandler = mockk<AppUpdateHandler>()
@@ -48,6 +52,10 @@ class InvokeDispatcherTest {
     contactsHandler = contactsHandler,
     calendarHandler = calendarHandler,
     motionHandler = motionHandler,
+    wifiHandler = wifiHandler,
+    clipboardHandler = clipboardHandler,
+    appHandler = appHandler,
+    voiceWakeHandler = voiceWakeHandler,
     a2uiHandler = a2uiHandler,
     debugHandler = debugHandler,
     appUpdateHandler = appUpdateHandler,

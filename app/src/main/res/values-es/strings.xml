@@ -458,4 +458,8 @@ Para más detalles, consulta el sitio oficial de VOICEVOX.</string>
     <string name="voicevox_other_chars">%1$d personaje(s) más</string>
     <string name="voicevox_size_approx_mb">Aprox. %1$d MB</string>
     <string name="voicevox_size_unknown">Desconocido</string>
+    <!-- Capabilities -->
+    <string name="none">Ninguno</string>
+    <string name="capability_motion">Movimiento</string>
+    <string name="permission_motion_desc">Necesario para el conteo de pasos y la detección de movimiento</string>
 </resources>

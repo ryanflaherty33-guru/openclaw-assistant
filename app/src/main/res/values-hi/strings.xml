@@ -458,4 +458,8 @@
     <string name="voicevox_other_chars">अन्य %1$d पात्र</string>
     <string name="voicevox_size_approx_mb">लगभग %1$d MB</string>
     <string name="voicevox_size_unknown">अज्ञात</string>
+    <!-- Capabilities -->
+    <string name="none">कोई नहीं</string>
+    <string name="capability_motion">गति</string>
+    <string name="permission_motion_desc">कदम गिनने और गति का पता लगाने के लिए आवश्यक</string>
 </resources>

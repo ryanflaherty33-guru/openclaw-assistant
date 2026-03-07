@@ -458,4 +458,8 @@
     <string name="voicevox_other_chars">Ещё %1$d персонаж(ей)</string>
     <string name="voicevox_size_approx_mb">Прибл. %1$d МБ</string>
     <string name="voicevox_size_unknown">Неизвестно</string>
+    <!-- Capabilities -->
+    <string name="none">Нет</string>
+    <string name="capability_motion">Движение</string>
+    <string name="permission_motion_desc">Требуется для подсчета шагов и обнаружения движения</string>
 </resources>

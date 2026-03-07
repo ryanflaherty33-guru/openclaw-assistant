@@ -457,4 +457,8 @@ Weitere Informationen finden Sie auf der offiziellen Website von VOICEVOX.</stri
     <string name="voicevox_other_chars">Andere %1$d-Zeichen</string>
     <string name="voicevox_size_approx_mb">ca. %1$d MB</string>
     <string name="voicevox_size_unknown">nicht klar</string>
+    <!-- Capabilities -->
+    <string name="none">Keine</string>
+    <string name="capability_motion">Bewegung</string>
+    <string name="permission_motion_desc">Erforderlich für Schrittzählung und Bewegungserkennung</string>
 </resources>

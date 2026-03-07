@@ -457,4 +457,8 @@
     <string name="voicevox_other_chars">其他 %1$d 字符</string>
     <string name="voicevox_size_approx_mb">約%1$dMB</string>
     <string name="voicevox_size_unknown">不清楚</string>
+    <!-- Capabilities -->
+    <string name="none">無</string>
+    <string name="capability_motion">運動</string>
+    <string name="permission_motion_desc">用於計步和運動檢測</string>
 </resources>
