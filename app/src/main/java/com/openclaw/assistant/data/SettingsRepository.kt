@@ -189,6 +189,16 @@ class SettingsRepository(context: Context) {
         get() = prefs.getBoolean(KEY_THINKING_SOUND_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_THINKING_SOUND_ENABLED, value).apply()
 
+    // Filler phrases enabled (相槌 & 待ちフレーズ)
+    var fillerPhrasesEnabled: Boolean
+        get() = prefs.getBoolean(KEY_FILLER_PHRASES_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_FILLER_PHRASES_ENABLED, value).apply()
+
+    // Barge-in during TTS (WakeWord interruption while speaking)
+    var ttsBargeInEnabled: Boolean
+        get() = prefs.getBoolean(KEY_TTS_BARGE_IN_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(KEY_TTS_BARGE_IN_ENABLED, value).apply()
+
     // Connection Verified
     var isVerified: Boolean
         get() = prefs.getBoolean(KEY_IS_VERIFIED, false)
@@ -286,6 +296,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_WAKEWORD_CONNECTION_TYPE = "wakeword_connection_type"
         private const val KEY_SPEECH_SILENCE_TIMEOUT = "speech_silence_timeout"
         private const val KEY_THINKING_SOUND_ENABLED = "thinking_sound_enabled"
+        private const val KEY_FILLER_PHRASES_ENABLED = "filler_phrases_enabled"
+        private const val KEY_TTS_BARGE_IN_ENABLED = "tts_barge_in_enabled"
         private const val KEY_SPEECH_LANGUAGE = "speech_language"
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_HAS_COMPLETED_SETUP = "has_completed_setup"

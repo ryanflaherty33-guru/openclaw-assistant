@@ -187,7 +187,6 @@ class NodeForegroundService : Service() {
     }
 
     lastRequiresMic = requiresMic
-
     var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
         ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
     if (requiresMic) {

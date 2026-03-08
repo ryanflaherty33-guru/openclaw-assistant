@@ -169,6 +169,19 @@ Weitere Informationen finden Sie auf der offiziellen Website von VOICEVOX.</stri
 <string name="speech_language_loading">Sprachen werden geladen…</string>
 <string name="thinking_sound">Denkender Klang</string>
 <string name="thinking_sound_desc">Spielen Sie Ton ab, während die KI denkt</string>
+
+    <!-- Filler Phrases & Barge-in -->
+    <string name="filler_phrases">Füllphrasen</string>
+    <string name="filler_phrases_desc">Kurze Bestätigungen während die KI denkt abspielen</string>
+    <string name="tts_barge_in">Sprachunterbrechung</string>
+    <string name="tts_barge_in_desc">Aktivierungswort während der Sprachausgabe sagen, um zu unterbrechen</string>
+
+    <!-- Filler phrase content (spoken by TTS) -->
+    <string name="filler_ok">OK</string>
+    <string name="wait_phrase_let_me_think">Lass mich nachdenken…</string>
+    <string name="wait_phrase_one_moment">Einen Moment…</string>
+    <string name="wait_phrase_checking">Ich prüfe das…</string>
+
 <string name="activation_phrase">Aktivierungssatz</string>
 <string name="custom_wake_word">Benutzerdefiniertes Aktivierungswort</string>
 <string name="custom_wake_word_hint">z.B. „Hey Kumpel.“</string>

@@ -170,6 +170,19 @@ Para más detalles, consulta el sitio oficial de VOICEVOX.</string>
 <string name="speech_language_loading">Cargando idiomas…</string>
 <string name="thinking_sound">Pensando en sonido</string>
 <string name="thinking_sound_desc">Reproduce sonido mientras la IA piensa</string>
+
+    <!-- Filler Phrases & Barge-in -->
+    <string name="filler_phrases">Frases de relleno</string>
+    <string name="filler_phrases_desc">Reproducir breves confirmaciones mientras la IA piensa</string>
+    <string name="tts_barge_in">Interrupción por voz</string>
+    <string name="tts_barge_in_desc">Decir la palabra de activación durante el habla para interrumpir</string>
+
+    <!-- Filler phrase content (spoken by TTS) -->
+    <string name="filler_ok">OK</string>
+    <string name="wait_phrase_let_me_think">Déjame pensar…</string>
+    <string name="wait_phrase_one_moment">Un momento…</string>
+    <string name="wait_phrase_checking">Déjame verificar…</string>
+
 <string name="activation_phrase">Frase de activación</string>
 <string name="custom_wake_word">Palabra de activación personalizada</string>
 <string name="custom_wake_word_hint">e.g., hola amigo</string>

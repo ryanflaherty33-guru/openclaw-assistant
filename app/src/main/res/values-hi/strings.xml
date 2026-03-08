@@ -170,6 +170,19 @@
 <string name="speech_language_loading">भाषाएँ लोड हो रही हैं...</string>
 <string name="thinking_sound">सोच ध्वनि</string>
 <string name="thinking_sound_desc">जब AI सोच रहा हो तो ध्वनि बजाएं</string>
+
+    <!-- Filler Phrases & Barge-in -->
+    <string name="filler_phrases">भराव वाक्यांश</string>
+    <string name="filler_phrases_desc">जब AI सोच रहा हो तो संक्षिप्त पुष्टिकरण चलाएं</string>
+    <string name="tts_barge_in">ध्वनि हस्तक्षेप</string>
+    <string name="tts_barge_in_desc">हस्तक्षेप करने के लिए बोलते समय सक्रियण शब्द कहें</string>
+
+    <!-- Filler phrase content (spoken by TTS) -->
+    <string name="filler_ok">OK</string>
+    <string name="wait_phrase_let_me_think">मुझे सोचने दो…</string>
+    <string name="wait_phrase_one_moment">एक पल…</string>
+    <string name="wait_phrase_checking">मैं जाँचता हूँ…</string>
+
 <string name="activation_phrase">सक्रियण वाक्यांश</string>
 <string name="custom_wake_word">कस्टम वेक वर्ड</string>
 <string name="custom_wake_word_hint">उदाहरण के लिए, अरे दोस्त</string>

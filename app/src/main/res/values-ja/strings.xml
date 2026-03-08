@@ -169,6 +169,19 @@
 <string name="speech_language_loading">言語を読み込み中…</string>
 <string name="thinking_sound">思考中の音</string>
 <string name="thinking_sound_desc">AI思考中に音を鳴らす</string>
+
+    <!-- Filler Phrases & Barge-in -->
+    <string name="filler_phrases">相槌フレーズ</string>
+    <string name="filler_phrases_desc">AI思考中に短い相槌を再生</string>
+    <string name="tts_barge_in">音声割り込み</string>
+    <string name="tts_barge_in_desc">読み上げ中にウェイクワードで中断して発話</string>
+
+    <!-- Filler phrase content (spoken by TTS) -->
+    <string name="filler_ok">OK</string>
+    <string name="wait_phrase_let_me_think">ちょっと考えるね</string>
+    <string name="wait_phrase_one_moment">少し待ってね</string>
+    <string name="wait_phrase_checking">確認するね</string>
+
 <string name="activation_phrase">起動フレーズ</string>
 <string name="custom_wake_word">カスタムウェイクワード</string>
 <string name="custom_wake_word_hint">例: hey buddy</string>

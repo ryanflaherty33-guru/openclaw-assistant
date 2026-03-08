@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclaw.assistant.OpenClawApplication
+import com.openclaw.assistant.R
 import com.openclaw.assistant.api.OpenClawClient
 import com.openclaw.assistant.data.SettingsRepository
 import com.openclaw.assistant.chat.ChatMarkdownPreprocessor
@@ -26,6 +27,8 @@ import java.util.Locale
 import java.util.UUID
 
 private const val TAG = "ChatViewModel"
+private const val INITIAL_FILLER_DELAY_MS = 750L
+private const val INTERRUPT_LISTEN_DELAY_MS = 350L
 
 data class PendingFileAttachment(
     val id: String,
@@ -78,6 +81,17 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         get() = settings.useNodeChat
 
     private var thinkingSoundJob: Job? = null
+    private var initialFillerPhraseJob: Job? = null
+    private var auxiliarySpeechJob: Job? = null
+    @Volatile private var ignoreNextTtsStop = false
+    private val interruptReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+            if (intent?.action != "com.openclaw.assistant.ACTION_INTERRUPT_TTS") return
+            if (!_uiState.value.isSpeaking && !_uiState.value.isPreparingSpeech) return
+            Log.d(TAG, "Barge-in interrupt received in ChatViewModel")
+            interruptAndListen()
+        }
+    }
 
     // WakeLock to keep CPU alive during voice interaction with screen off
     private var wakeLock: android.os.PowerManager.WakeLock? = null
@@ -124,6 +138,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     
     // We combine local/remote message streams into uiState
     init {
+        val app = getApplication<Application>()
+        androidx.core.content.ContextCompat.registerReceiver(
+            app,
+            interruptReceiver,
+            android.content.IntentFilter("com.openclaw.assistant.ACTION_INTERRUPT_TTS"),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         _uiState.update { it.copy(isNodeChatMode = useNodeChat) }
         if (useNodeChat) {
             // Remote sessions/messages via NodeRuntime
@@ -470,12 +491,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 return
             }
             val attachmentsToProcess = _uiState.value.attachments
-            _uiState.update { it.copy(error = null, attachments = emptyList()) }
+            _uiState.update { it.copy(error = null, attachments = emptyList(), isThinking = true) }
             pendingNodeChatTts = true
             if (lastInputWasVoice) {
                 toneGenerator.startTone(android.media.ToneGenerator.TONE_PROP_ACK, 150)
             }
             startThinkingSound()
+            scheduleInitialFillerPhrase()
+            startWaitPhraseTimer() // Gateway 経由送信の待ちフレーズタイマー開始
+
             viewModelScope.launch {
                 try {
                     val outgoing = attachmentsToProcess.map { att ->
@@ -494,6 +518,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 } catch (e: Exception) {
                     pendingNodeChatTts = false
+                    cancelInitialFillerPhrase()
+                    cancelWaitPhraseTimer()
                     stopThinkingSound()
                     _uiState.update { it.copy(isThinking = false, error = e.message) }
                 }
@@ -510,6 +536,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             toneGenerator.startTone(android.media.ToneGenerator.TONE_PROP_ACK, 150)
         }
         startThinkingSound()
+        scheduleInitialFillerPhrase()
+        startWaitPhraseTimer() // HTTP 経由送信の待ちフレーズタイマー開始
 
         viewModelScope.launch {
             try {
@@ -517,6 +545,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 chatRepository.addMessage(sessionId, text, isUser = true)
                 sendViaHttp(sessionId, text, httpAttachments)
             } catch (e: Exception) {
+                cancelInitialFillerPhrase()
+                cancelWaitPhraseTimer()
                 stopThinkingSound()
                 _uiState.update { it.copy(isThinking = false, error = e.message) }
             }
@@ -552,6 +582,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     },
                     onFailure = { error ->
                         viewModelScope.launch {
+                            cancelInitialFillerPhrase()
                             stopThinkingSound()
                             _uiState.update { it.copy(isThinking = false, error = error.message) }
                         }
@@ -559,6 +590,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 )
             } catch (e: Exception) {
                 viewModelScope.launch {
+                    cancelInitialFillerPhrase()
                     stopThinkingSound()
                     _uiState.update { it.copy(isThinking = false, error = e.message) }
                 }
@@ -567,6 +599,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun afterResponseReceived(responseText: String) {
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
+        stopAuxiliarySpeech()
         if (settings.ttsEnabled) {
             speak(responseText)
         } else if (lastInputWasVoice && settings.continuousMode) {
@@ -581,8 +616,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var listeningJob: kotlinx.coroutines.Job? = null
 
     fun startListening() {
+        startListeningInternal(initialDelayMs = 500L, forceRestart = false)
+    }
+
+    private fun startListeningInternal(initialDelayMs: Long, forceRestart: Boolean) {
         Log.e(TAG, "startListening() called, isListening=${_uiState.value.isListening}")
-        if (_uiState.value.isListening) return
+        if (_uiState.value.isListening && !forceRestart) return
 
         // Pause Hotword Service to prevent microphone conflict
         sendPauseBroadcast()
@@ -592,33 +631,40 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         lastInputWasVoice = true // Mark as voice input
         listeningJob?.cancel()
+        _uiState.update { it.copy(isListening = false, partialText = "", error = null) }
 
         // Stop TTS if speaking
         ttsManager?.stop()
+        speechManager.destroy()
 
         listeningJob = viewModelScope.launch {
             val startTime = System.currentTimeMillis()
             var hasActuallySpoken = false
             
             // Wait for TTS resource release before starting mic
-            delay(500)
+            delay(initialDelayMs)
 
             try {
                 while (isActive && !hasActuallySpoken) {
-                    Log.e(TAG, "Starting speechManager.startListening(), isListening=true")
-                    _uiState.update { it.copy(isListening = true, partialText = "") }
+                    Log.e(TAG, "Starting speechManager.startListening()")
+                    _uiState.update { it.copy(isListening = false, partialText = "") }
 
                     speechManager.startListening(settings.speechLanguage.ifEmpty { null }, settings.speechSilenceTimeout).collect { result ->
                         Log.e(TAG, "SpeechResult: $result")
                         when (result) {
                             is SpeechResult.Ready -> {
+                                _uiState.update { it.copy(isListening = true, partialText = "", error = null) }
                                 toneGenerator.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 150)
                             }
+                            is SpeechResult.Listening -> {
+                                _uiState.update { it.copy(isListening = true, error = null) }
+                            }
                             is SpeechResult.Processing -> {
+                                _uiState.update { it.copy(isListening = false) }
                                 // No sound here - thinking ACK sound will play when AI starts processing
                             }
                             is SpeechResult.PartialResult -> {
-                                _uiState.update { it.copy(partialText = result.text) }
+                                _uiState.update { it.copy(isListening = true, partialText = result.text) }
                             }
                             is SpeechResult.Result -> {
                                 hasActuallySpoken = true
@@ -629,8 +675,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                 val elapsed = System.currentTimeMillis() - startTime
                                 val isTimeout = result.code == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || 
                                               result.code == SpeechRecognizer.ERROR_NO_MATCH
+                                val isRetryableStartError =
+                                    result.code == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
+                                    result.code == SpeechRecognizer.ERROR_CLIENT
                                 
-                                if (isTimeout && elapsed < settings.speechSilenceTimeout) {
+                                if (isRetryableStartError && elapsed < 10_000L) {
+                                    Log.d(TAG, "Speech recognizer not ready yet ($result), retrying...")
+                                    _uiState.update { it.copy(isListening = false, partialText = "") }
+                                    speechManager.destroy()
+                                    delay(500)
+                                } else if (isTimeout && elapsed < settings.speechSilenceTimeout) {
                                     Log.d(TAG, "Speech timeout within ${settings.speechSilenceTimeout}ms window ($elapsed ms), retrying loop...")
                                     // Just fall through to next while iteration
                                     _uiState.update { it.copy(isListening = false) }
@@ -705,6 +759,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val previousJob = speakingJob
         val requestId = nextSpeechRequestId()
         speakingJob = viewModelScope.launch {
+            ignoreNextTtsStop = false
             try {
                 cancelSupersededSpeech(previousJob)
                 ensureCurrentSpeechRequest(requestId)
@@ -725,6 +780,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 ensureCurrentSpeechRequest(requestId)
                 _uiState.update { it.copy(isSpeaking = false, isPreparingSpeech = false) }
 
+                if (ignoreNextTtsStop) {
+                    return@launch
+                }
+
                 // If it was a voice conversation and continuous mode is on, continue listening
                 if (success && lastInputWasVoice && settings.continuousMode) {
                     // Explicit cleanup and wait for TTS to fully release audio focus
@@ -740,8 +799,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     sendResumeBroadcast()
                 }
             } catch (e: CancellationException) {
+                if (ignoreNextTtsStop) {
+                    Log.d(TAG, "Ignoring controlled TTS cancellation (requestId=$requestId)")
+                    return@launch
+                }
                 Log.d(TAG, "TTS speak cancelled (requestId=$requestId)")
             } catch (e: Exception) {
+                if (ignoreNextTtsStop) {
+                    return@launch
+                }
                 Log.e(TAG, "TTS speak error", e)
                 if (!isCurrentSpeechRequest(requestId)) {
                     return@launch
@@ -792,12 +858,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     is TTSState.Speaking -> {
                         Log.d(TAG, "TTS Speaking")
                         _uiState.update { it.copy(isPreparingSpeech = false, isSpeaking = true) }
+                        if (settings.ttsBargeInEnabled) {
+                            sendResumeBroadcast()
+                        }
                     }
                     is TTSState.Done -> {
                         Log.d(TAG, "TTS Done")
                         completed = true
+                        if (settings.ttsBargeInEnabled && !settings.continuousMode) {
+                            sendPauseBroadcast()
+                        }
                     }
                     is TTSState.Error -> {
+                        if (ignoreNextTtsStop) {
+                            Log.d(TAG, "Ignoring TTS stop during controlled interruption")
+                            return@collect
+                        }
                         Log.e(TAG, "TTS Error: ${state.message}")
                         error = true
                     }
@@ -816,6 +892,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun stopSpeaking() {
         nextSpeechRequestId()
         lastInputWasVoice = false // Stop loop if manually stopped
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
+        stopThinkingSound()
+        stopAuxiliarySpeech()
+        ignoreNextTtsStop = true
         ttsManager?.stop()
         speakingJob?.cancel()
         speakingJob = null
@@ -835,13 +916,29 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun interruptAndListen() {
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
+        stopThinkingSound()
+        stopAuxiliarySpeech()
+        listeningJob?.cancel()
         nextSpeechRequestId()
+        ignoreNextTtsStop = true
         ttsManager?.stop()
         speakingJob?.cancel()
         speakingJob = null
-        _uiState.update { it.copy(isSpeaking = false, isPreparingSpeech = false) }
+        speechManager.destroy()
+        _uiState.update {
+            it.copy(
+                isListening = false,
+                isThinking = false,
+                isSpeaking = false,
+                isPreparingSpeech = false,
+                partialText = "",
+                error = null
+            )
+        }
         sendPauseBroadcast()
-        startListening()
+        startListeningInternal(initialDelayMs = INTERRUPT_LISTEN_DELAY_MS, forceRestart = true)
     }
 
     // REMOVED private fun addMessage because we now flow from DB
@@ -886,9 +983,104 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         thinkingSoundJob = null
     }
 
+    private var waitPhraseJob: Job? = null
+
+    private fun scheduleInitialFillerPhrase() {
+        cancelInitialFillerPhrase()
+        if (!settings.fillerPhrasesEnabled || !settings.ttsEnabled) return
+        initialFillerPhraseJob = viewModelScope.launch {
+            delay(INITIAL_FILLER_DELAY_MS)
+            if (_uiState.value.isThinking && isActive) {
+                playFillerPhrase()
+            }
+        }
+    }
+
+    private fun cancelInitialFillerPhrase() {
+        initialFillerPhraseJob?.cancel()
+        initialFillerPhraseJob = null
+    }
+
+    private fun stopAuxiliarySpeech() {
+        val hadActiveAuxSpeech = auxiliarySpeechJob?.isActive == true
+        auxiliarySpeechJob?.cancel()
+        auxiliarySpeechJob = null
+        if (hadActiveAuxSpeech) {
+            ttsManager?.stop()
+        }
+    }
+
+    private fun startWaitPhraseTimer() {
+        waitPhraseJob?.cancel()
+        if (!settings.fillerPhrasesEnabled || !settings.ttsEnabled) return
+        waitPhraseJob = viewModelScope.launch {
+            delay(5000) // 5秒待機
+            if (_uiState.value.isThinking && isActive) {
+                Log.d(TAG, "Wait phrase timer triggered (> 5s). Playing wait phrase.")
+                playWaitPhrase()
+            }
+        }
+    }
+
+    private fun cancelWaitPhraseTimer() {
+        waitPhraseJob?.cancel()
+        waitPhraseJob = null
+    }
+
+    private fun playFillerPhrase() {
+        val app = getApplication<Application>()
+        val phrase = app.getString(R.string.filler_ok)
+
+        stopAuxiliarySpeech()
+        var playbackJob: Job? = null
+        playbackJob = viewModelScope.launch {
+            try {
+                ttsManager?.speakWithProgress(phrase)?.collect {} // 発話完了を待たない（progress監視のみだが実質投げっぱなし）
+            } catch (_: kotlinx.coroutines.CancellationException) {
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to play filler phrase", e)
+            } finally {
+                if (auxiliarySpeechJob === playbackJob) {
+                    auxiliarySpeechJob = null
+                }
+            }
+        }
+        auxiliarySpeechJob = playbackJob
+    }
+
+    private fun playWaitPhrase() {
+        val app = getApplication<Application>()
+        val waitPhrases = listOf(
+            app.getString(R.string.wait_phrase_let_me_think),
+            app.getString(R.string.wait_phrase_one_moment),
+            app.getString(R.string.wait_phrase_checking)
+        )
+        val phrase = waitPhrases.random()
+
+        stopAuxiliarySpeech()
+        var playbackJob: Job? = null
+        playbackJob = viewModelScope.launch {
+            try {
+                ttsManager?.speakWithProgress(phrase)?.collect {}
+            } catch (_: kotlinx.coroutines.CancellationException) {
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to play wait phrase", e)
+            } finally {
+                if (auxiliarySpeechJob === playbackJob) {
+                    auxiliarySpeechJob = null
+                }
+            }
+        }
+        auxiliarySpeechJob = playbackJob
+    }
+
     override fun onCleared() {
         super.onCleared()
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
         stopThinkingSound()
+        stopAuxiliarySpeech()
+        getApplication<Application>().unregisterReceiver(interruptReceiver)
         speechManager.destroy()
         toneGenerator.release()
         releaseWakeLock()
