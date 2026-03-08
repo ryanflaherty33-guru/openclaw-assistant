@@ -19,10 +19,11 @@
 - 🎤 **Customizable Wake Word** - Choose from "OpenClaw", "Hey Assistant", "Jarvis", "Computer", or set your own custom phrase
 - 📴 **Offline Wake Word Detection** - Always-on local processing powered by [Vosk](https://alphacephei.com/vosk/), no internet required
 - 🗣️ **Speech Recognition** - Real-time speech-to-text with partial results display and configurable silence timeout
-- 🔊 **Text-to-Speech** - Automatic voice output with adjustable speech speed, multi-engine support, and smart text chunking for long responses
+- 🔊 **Text-to-Speech** - Automatic voice output with adjustable speech speed, multi-engine support, and smart text chunking for long responses. Supports **Android native**, **ElevenLabs**, **OpenAI**, and **VOICEVOX** (full build) TTS providers
 - 🔄 **Continuous Conversation Mode** - Auto-resumes listening after AI response for natural back-and-forth dialogue
 - 🏠 **System Assistant Integration** - Long press Home button to activate via Android VoiceInteractionService
 - 🔃 **Wake Word Sync** - Download wake words configured on the gateway server to your device
+- ⌚ **Wear OS Support** - Use OpenClaw Assistant directly from your smartwatch
 
 #### Chat & AI
 - 💬 **In-App Chat Interface** - Full-featured chat UI with text and voice input, markdown rendering, and message timestamps
@@ -31,6 +32,7 @@
 - 💾 **Chat History** - Local message persistence with session management (create, switch, delete conversations)
 - 🔔 **Thinking Sound** - Optional audio cue while waiting for AI response
 - 🪟 **Dual Chat Modes** - Gateway Chat (via Node-Gateway connection) or HTTP Chat (direct HTTP endpoint)
+- 📎 **File Attachments** - Attach images directly in the chat interface
 
 #### Gateway & Connectivity
 - 🌐 **WebSocket Gateway** - Persistent connection with auto-reconnect (exponential backoff), ping keep-alive, and RPC protocol
@@ -42,10 +44,19 @@
 - ✅ **Connection Testing** - Built-in connection test with live feedback in settings
 
 #### Node Capabilities
-- 📷 **Camera** - AI can capture photos via the device camera
-- 📍 **Location** - Share your location (Off / Coarse / Precise) with the AI
-- 📲 **SMS** - Allow the AI to send text messages with your permission
+- 📷 **Camera** - AI can capture photos and video clips via the device camera
+- 📍 **Location** - Share your location (Off / Coarse / Precise) with the AI, including background tracking
+- 📲 **SMS** - Allow the AI to send and read text messages with your permission
 - 🖥️ **Screen Recording** - Let the AI see your screen when you explicitly ask it to
+- 🔔 **Notifications** - AI can read and interact with your active notifications
+- 🏃 **Motion & Activity** - Step counting and physical activity detection (walking, running, etc.)
+- 📶 **WiFi** - AI can check WiFi status and list available networks
+- 👥 **Contacts** - AI can search, add, update, and delete contacts
+- 📅 **Calendar** - AI can query, add, update, and delete calendar events
+- 📋 **Clipboard** - AI can read from and write to the clipboard
+- 📱 **Apps** - AI can list installed apps and launch applications
+- 🖼️ **Photos** - AI can retrieve recent photos from your device gallery
+- 🔧 **System Control** - AI can adjust volume, screen brightness, and send notifications
 
 #### System & Security
 - 🔒 **Encrypted Settings** - All sensitive data (URL, tokens) stored with AES256-GCM encryption
@@ -55,11 +66,12 @@
 - 🔋 **Battery Optimization Exclusion** - Ensures wake word detection runs reliably in background
 
 #### UI & Accessibility
-- 🎨 **Material 3 Design** - Modern UI with Jetpack Compose and dynamic theming
-- 📝 **Markdown Rendering** - Rich text display in chat messages (bold, italic, code blocks, lists, links)
+- 🎨 **Material 3 Design** - Modern UI with Jetpack Compose and dynamic theming, 4-tab bottom navigation
+- 🖼️ **Canvas Tab** - WebView-based interactive display for rich AI-driven UI
+- 📝 **Markdown Rendering** - Rich text display in chat messages (bold, italic, code blocks, lists, links, inline images)
 - 🩺 **Voice Diagnostics** - Built-in health check for STT/TTS engines with fix suggestions
 - ❓ **Troubleshooting Guide** - In-app help for common issues (Circle to Search, gesture navigation, etc.)
-- 🌍 **Bilingual UI** - Full English and Japanese localization
+- 🌍 **8-Language UI** - English, Japanese, Spanish, French, German, Russian, Simplified Chinese, Traditional Chinese
 
 ### 📱 How to Use
 
@@ -78,6 +90,11 @@ Download APK from [Releases](https://github.com/yuga-hashimoto/OpenClawAssistant
 
 The app connects to your OpenClaw server via the Gateway protocol.
 
+**Quick setup via QR code:**
+1. On your server, run `openclaw qr` to display the setup QR code
+2. Open the app and tap **Scan QR Code** in the setup guide to auto-configure
+
+**Manual setup:**
 1. Open the app and tap ⚙️ to open **Settings**
 2. Under **Gateway Connection**:
    - The app will auto-discover gateways on your local network
@@ -156,15 +173,16 @@ ngrok http 18789
 ### 🛠 Tech Stack
 
 | Category | Technology |
-|----------|-----------| 
+|----------|-----------|
 | **Language** | Kotlin |
 | **UI** | Jetpack Compose + Material 3 |
 | **Speech Recognition** | Android SpeechRecognizer |
-| **Text-to-Speech** | Android TextToSpeech (multi-engine) |
+| **Text-to-Speech** | Android TTS / ElevenLabs / OpenAI / VOICEVOX (full build) |
 | **Wake Word** | [Vosk](https://alphacephei.com/vosk/) 0.3.75 (offline) |
 | **System Integration** | VoiceInteractionService |
 | **Networking** | OkHttp 4.12 + WebSocket |
-| **Discovery** | mDNS/Bonjour (NsdManager) |
+| **Discovery** | mDNS/Bonjour (NsdManager) + dnsjava 3.6.3 |
+| **QR Scanning** | ZXing 4.3.0 |
 | **JSON** | Gson + kotlinx.serialization |
 | **Database** | Room (SQLite) |
 | **Security** | EncryptedSharedPreferences (AES256-GCM) |
@@ -172,7 +190,7 @@ ngrok http 18789
 | **Markdown** | multiplatform-markdown-renderer-m3 |
 | **Crash Reporting** | Firebase Crashlytics |
 | **Analytics** | Firebase Analytics |
-| **Min SDK** | Android 8.0 (API 26) |
+| **Min SDK** | Android 12 (API 31) |
 | **Target SDK** | Android 14 (API 34) |
 
 ### 📋 Required Permissions
@@ -191,7 +209,15 @@ ngrok http 18789
 | `CAMERA` | Camera capture for AI (optional) |
 | `ACCESS_FINE_LOCATION` | Precise GPS for AI (optional) |
 | `ACCESS_COARSE_LOCATION` | Approximate location for AI (optional) |
+| `ACCESS_BACKGROUND_LOCATION` | Background location tracking for AI (optional) |
 | `SEND_SMS` / `READ_SMS` | AI-assisted messaging (optional) |
+| `READ_CONTACTS` / `WRITE_CONTACTS` | AI contact management (optional) |
+| `READ_CALENDAR` / `WRITE_CALENDAR` | AI calendar access (optional) |
+| `ACTIVITY_RECOGNITION` | Step counting & activity detection (optional) |
+| `READ_MEDIA_IMAGES` / `READ_MEDIA_VIDEO` | Photo & video access for AI (optional) |
+| `NEARBY_WIFI_DEVICES` | WiFi network discovery (Android 13+, optional) |
+| `ACCESS_WIFI_STATE` / `CHANGE_WIFI_STATE` | WiFi status & control (optional) |
+| `BIND_NOTIFICATION_LISTENER_SERVICE` | Read & interact with notifications (optional, requires manual Settings grant) |
 
 ### 🤝 Contributing
 
@@ -213,10 +239,11 @@ MIT License - See [LICENSE](LICENSE) for details.
 - 🎤 **カスタマイズ可能なウェイクワード** - 「OpenClaw」「Hey Assistant」「Jarvis」「Computer」から選択、または自由にカスタムフレーズを入力
 - 📴 **オフライン対応のウェイクワード検知** - [Vosk](https://alphacephei.com/vosk/)によるローカル処理で常時待ち受け、インターネット不要
 - 🗣️ **音声認識** - リアルタイムの音声テキスト変換、部分認識結果の表示、サイレンスタイムアウト設定
-- 🔊 **音声読み上げ (TTS)** - 読み上げ速度調整、複数エンジン対応、長文の自動分割読み上げ
+- 🔊 **音声読み上げ (TTS)** - 読み上げ速度調整、複数エンジン対応、長文の自動分割読み上げ。**Android標準**・**ElevenLabs**・**OpenAI**・**VOICEVOX**（fullビルド）に対応
 - 🔄 **連続会話モード** - AI応答後に自動で聞き取り再開、自然な対話フロー
 - 🏠 **システムアシスタント連携** - ホームボタン長押しでAndroid VoiceInteractionService経由で起動
 - 🔃 **ウェイクワード同期** - ゲートウェイサーバーで設定されたウェイクワードをデバイスにダウンロード
+- ⌚ **Wear OSサポート** - スマートウォッチからOpenClaw Assistantを直接利用
 
 #### チャット・AI
 - 💬 **アプリ内チャットUI** - テキスト＆音声入力対応のフル機能チャット画面、Markdownレンダリング、タイムスタンプ表示
@@ -225,6 +252,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 - 💾 **チャット履歴** - ローカルDBでメッセージ永続化、セッション管理（作成・切替・削除）
 - 🔔 **思考サウンド** - AI処理中のオプション音声フィードバック
 - 🪟 **2つのチャットモード** - Gateway Chat（Node-Gateway経由）またはHTTP Chat（直接HTTPエンドポイント）
+- 📎 **ファイル添付** - チャット画面から画像ファイルを直接添付
 
 #### ゲートウェイ・接続
 - 🌐 **WebSocketゲートウェイ** - 自動再接続（指数バックオフ）、ping keep-alive、RPCプロトコル
@@ -236,10 +264,19 @@ MIT License - See [LICENSE](LICENSE) for details.
 - ✅ **接続テスト** - 設定画面で接続確認をリアルタイムフィードバック付きで実行
 
 #### ノード機能
-- 📷 **カメラ** - AIがデバイスカメラで写真を撮影
-- 📍 **位置情報** - 位置情報をAIと共有（オフ / 大まか / 精密）
-- 📲 **SMS** - AIが許可を得てSMSを送信
+- 📷 **カメラ** - AIがデバイスカメラで写真・動画を撮影
+- 📍 **位置情報** - 位置情報をAIと共有（オフ / 大まか / 精密）、バックグラウンドトラッキング対応
+- 📲 **SMS** - AIが許可を得てSMSの送受信を実行
 - 🖥️ **スクリーンキャプチャ** - ユーザーの明示的な要求時にAIが画面を確認
+- 🔔 **通知** - AIがアクティブな通知を読み取り・操作
+- 🏃 **モーション・アクティビティ** - 歩数計測・アクティビティ認識（歩行・走行など）
+- 📶 **WiFi** - AIがWiFi状態確認・利用可能なネットワーク一覧を取得
+- 👥 **連絡先** - AIが連絡先の検索・追加・更新・削除を実行
+- 📅 **カレンダー** - AIがカレンダーイベントの照会・追加・更新・削除を実行
+- 📋 **クリップボード** - AIがクリップボードの読み取り・書き込みを実行
+- 📱 **アプリ** - AIがインストール済みアプリの一覧取得・起動を実行
+- 🖼️ **写真** - AIがデバイスのギャラリーから最新の写真を取得
+- 🔧 **システム操作** - AIが音量・画面の明るさの調整、通知の送信を実行
 
 #### システム・セキュリティ
 - 🔒 **設定の暗号化保存** - URL・トークンなどの機密データをAES256-GCM暗号化で保存
@@ -249,11 +286,12 @@ MIT License - See [LICENSE](LICENSE) for details.
 - 🔋 **バッテリー最適化除外** - バックグラウンドでのウェイクワード検知の安定動作を保証
 
 #### UI・アクセシビリティ
-- 🎨 **Material 3デザイン** - Jetpack ComposeとダイナミックテーマによるモダンUI
-- 📝 **Markdownレンダリング** - チャットメッセージのリッチテキスト表示（太字、斜体、コードブロック、リスト、リンク）
+- 🎨 **Material 3デザイン** - Jetpack ComposeとダイナミックテーマによるモダンUI、4タブボトムナビゲーション
+- 🖼️ **Canvasタブ** - WebViewベースのインタラクティブ表示でAIがリッチなUIを描画
+- 📝 **Markdownレンダリング** - チャットメッセージのリッチテキスト表示（太字、斜体、コードブロック、リスト、リンク、インライン画像）
 - 🩺 **音声診断** - STT/TTSエンジンのヘルスチェックと修正提案
 - ❓ **トラブルシューティングガイド** - よくある問題のアプリ内ヘルプ（Circle to Search、ジェスチャーナビゲーションなど）
-- 🌍 **日英バイリンガルUI** - 英語と日本語の完全ローカライゼーション
+- 🌍 **8言語対応UI** - 英語・日本語・スペイン語・フランス語・ドイツ語・ロシア語・中国語（簡体・繁体）
 
 ### 📱 使い方
 
@@ -272,6 +310,11 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 アプリはGatewayプロトコルを通じてOpenClawサーバーと接続します。
 
+**QRコードでのクイックセットアップ：**
+1. サーバー側で `openclaw qr` を実行してセットアップQRコードを表示
+2. アプリのセットアップガイドで **QRコードをスキャン** をタップして自動設定
+
+**手動セットアップ：**
 1. アプリを開き、⚙️から **設定** を開く
 2. **Gateway Connection** セクションで：
    - ローカルネットワーク上のゲートウェイを自動検出
@@ -353,11 +396,12 @@ Chat Completions APIが有効であることを `moltbot.json` で確認：
 | **言語** | Kotlin |
 | **UI** | Jetpack Compose + Material 3 |
 | **音声認識** | Android SpeechRecognizer |
-| **音声合成** | Android TextToSpeech (マルチエンジン対応) |
+| **音声合成** | Android TTS / ElevenLabs / OpenAI / VOICEVOX (fullビルド) |
 | **ウェイクワード** | [Vosk](https://alphacephei.com/vosk/) 0.3.75 (オフライン対応) |
 | **システム連携** | VoiceInteractionService |
 | **通信** | OkHttp 4.12 + WebSocket |
-| **自動検出** | mDNS/Bonjour (NsdManager) |
+| **自動検出** | mDNS/Bonjour (NsdManager) + dnsjava 3.6.3 |
+| **QRスキャン** | ZXing 4.3.0 |
 | **JSON** | Gson + kotlinx.serialization |
 | **データベース** | Room (SQLite) |
 | **セキュリティ** | EncryptedSharedPreferences (AES256-GCM) |
@@ -365,7 +409,7 @@ Chat Completions APIが有効であることを `moltbot.json` で確認：
 | **Markdown** | multiplatform-markdown-renderer-m3 |
 | **クラッシュレポート** | Firebase Crashlytics |
 | **アナリティクス** | Firebase Analytics |
-| **最小SDK** | Android 8.0 (API 26) |
+| **最小SDK** | Android 12 (API 31) |
 | **ターゲットSDK** | Android 14 (API 34) |
 
 ### 📋 必要な権限
@@ -384,7 +428,15 @@ Chat Completions APIが有効であることを `moltbot.json` で確認：
 | `CAMERA` | AIによるカメラ撮影（任意） |
 | `ACCESS_FINE_LOCATION` | AIへの精密GPS共有（任意） |
 | `ACCESS_COARSE_LOCATION` | AIへのおおよその位置共有（任意） |
+| `ACCESS_BACKGROUND_LOCATION` | AIによるバックグラウンド位置情報追跡（任意） |
 | `SEND_SMS` / `READ_SMS` | AIによるSMSアシスト（任意） |
+| `READ_CONTACTS` / `WRITE_CONTACTS` | AIによる連絡先管理（任意） |
+| `READ_CALENDAR` / `WRITE_CALENDAR` | AIによるカレンダーアクセス（任意） |
+| `ACTIVITY_RECOGNITION` | 歩数計測・アクティビティ認識（任意） |
+| `READ_MEDIA_IMAGES` / `READ_MEDIA_VIDEO` | AIによる写真・動画アクセス（任意） |
+| `NEARBY_WIFI_DEVICES` | WiFiネットワーク探索 (Android 13+、任意) |
+| `ACCESS_WIFI_STATE` / `CHANGE_WIFI_STATE` | WiFi状態確認・操作（任意） |
+| `BIND_NOTIFICATION_LISTENER_SERVICE` | 通知の読み取り・操作（任意、設定画面での手動許可が必要） |
 
 ### 🤝 Contributing
 
