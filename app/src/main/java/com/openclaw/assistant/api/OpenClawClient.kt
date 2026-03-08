@@ -6,6 +6,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -60,6 +61,14 @@ class OpenClawClient(private val ignoreSslErrors: Boolean = false) {
             )
         }
 
+        val parsedUrl = try {
+            httpUrl.trim().toHttpUrl()
+        } catch (e: IllegalArgumentException) {
+            return@withContext Result.failure(
+                IllegalArgumentException("Invalid server URL: ${e.message}")
+            )
+        }
+
         try {
             // OpenAI Chat Completions format for /v1/chat/completions
             val requestBody = JsonObject().apply {
@@ -99,7 +108,7 @@ class OpenClawClient(private val ignoreSslErrors: Boolean = false) {
                 .toRequestBody("application/json; charset=utf-8".toMediaType())
 
             val requestBuilder = Request.Builder()
-                .url(httpUrl)
+                .url(parsedUrl)
                 .post(jsonBody)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Accept", "application/json")
