@@ -169,6 +169,23 @@
 <string name="speech_language_loading">正在載入語言...</string>
 <string name="thinking_sound">思考之聲</string>
 <string name="thinking_sound_desc">AI 思考時播放聲音</string>
+
+    <!-- Filler Phrases & Barge-in -->
+    <string name="filler_phrases">語氣詞</string>
+    <string name="filler_phrases_desc">AI 思考時播放簡短的確認語氣詞</string>
+    <string name="tts_barge_in">語音打斷</string>
+    <string name="tts_barge_in_desc">在朗讀過程中說出喚醒詞打斷並說話</string>
+
+    <!-- Filler phrase content (spoken by TTS) -->
+    <string name="filler_hmm">嗯</string>
+    <string name="filler_got_it">明白</string>
+    <string name="filler_i_see">了解</string>
+    <string name="filler_right">好的</string>
+    <string name="filler_ok">OK</string>
+    <string name="wait_phrase_let_me_think">讓我想想…</string>
+    <string name="wait_phrase_one_moment">稍等一下…</string>
+    <string name="wait_phrase_checking">我查看一下…</string>
+
 <string name="activation_phrase">啟動短語</string>
 <string name="custom_wake_word">自訂喚醒詞</string>
 <string name="custom_wake_word_hint">例如，嘿夥計</string>

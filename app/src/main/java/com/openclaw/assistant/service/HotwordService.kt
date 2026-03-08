@@ -71,6 +71,7 @@ class HotwordService : Service(), VoskRecognitionListener {
 
     @Volatile private var isListeningForCommand = false
     @Volatile private var isSessionActive = false
+    @Volatile private var pendingInterruptLaunch = false
     private var audioRetryCount = 0
     private val MAX_AUDIO_RETRIES = 5
     private var watchdogJob: Job? = null
@@ -83,6 +84,7 @@ class HotwordService : Service(), VoskRecognitionListener {
             when (intent?.action) {
                 ACTION_PAUSE_HOTWORD -> {
                     Log.d(TAG, "Pause signal received")
+                    pendingInterruptLaunch = false
                     isSessionActive = true
                     speechService?.stop()
                     speechService?.shutdown()
@@ -93,6 +95,7 @@ class HotwordService : Service(), VoskRecognitionListener {
                 ACTION_RESUME_HOTWORD -> {
                     Log.d(TAG, "Resume signal received")
                     cancelWatchdog()
+                    pendingInterruptLaunch = false
                     // Reset both flags to ensure clean state
                     isSessionActive = false
                     isListeningForCommand = false
@@ -554,12 +557,17 @@ class HotwordService : Service(), VoskRecognitionListener {
     }
 
     private fun onHotwordDetected() {
-        if (isListeningForCommand || isSessionActive) return
+        if (isListeningForCommand || (isSessionActive && !settings.ttsBargeInEnabled)) return
         isListeningForCommand = true
-        isSessionActive = true
         startWatchdog()
 
-        Log.d(TAG, "Hotword Detected! Triggering Assistant Overlay...")
+        Log.d(TAG, "Hotword Detected! Triggering Assistant Overlay or Barge-in...")
+
+        // Broadcast to interrupt ongoing TTS (Barge-in)
+        val interruptIntent = Intent("com.openclaw.assistant.ACTION_INTERRUPT_TTS")
+        interruptIntent.setPackage(packageName)
+        sendBroadcast(interruptIntent)
+        pendingInterruptLaunch = true
 
         // Stop service on Main thread to avoid race conditions
         scope.launch {
@@ -574,8 +582,14 @@ class HotwordService : Service(), VoskRecognitionListener {
             }
             speechService = null
 
-            delay(300) // Wait for resource release
+            delay(350) // Give an existing session a moment to claim the interrupt
 
+            if (!pendingInterruptLaunch) {
+                Log.d(TAG, "Barge-in handled by existing session")
+                return@launch
+            }
+            pendingInterruptLaunch = false
+            isSessionActive = true
             val intent = Intent(this@HotwordService, OpenClawAssistantService::class.java).apply {
                 action = OpenClawAssistantService.ACTION_SHOW_ASSISTANT
             }

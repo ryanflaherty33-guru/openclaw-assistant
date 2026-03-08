@@ -69,6 +69,8 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
 
     companion object {
         private const val TAG = "OpenClawSession"
+        private const val INITIAL_FILLER_DELAY_MS = 750L
+        private const val INTERRUPT_LISTEN_DELAY_MS = 350L
     }
 
     private val settings = SettingsRepository.getInstance(context)
@@ -81,6 +83,18 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
     private var currentSessionId: String? = null
     
     private var scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var initialFillerPhraseJob: Job? = null
+    private var auxiliarySpeechJob: Job? = null
+    @Volatile private var ignoreNextTtsStop = false
+    private val interruptReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != "com.openclaw.assistant.ACTION_INTERRUPT_TTS") return
+            if (currentState.value != AssistantState.SPEAKING &&
+                currentState.value != AssistantState.PREPARING_SPEECH) return
+            Log.d(TAG, "Barge-in interrupt received in OpenClawSession")
+            interruptAndListen()
+        }
+    }
 
     // UI State
     private var currentState = mutableStateOf(AssistantState.IDLE)
@@ -120,6 +134,12 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
         ttsManager = TTSManager(context)
         val initialized = ttsManager.initializeCurrentProvider()
         Log.e(TAG, "Session TTS: initialized=$initialized ready=${ttsManager.isReady()} error=${ttsManager.getErrorMessage()}")
+        androidx.core.content.ContextCompat.registerReceiver(
+            context,
+            interruptReceiver,
+            android.content.IntentFilter("com.openclaw.assistant.ACTION_INTERRUPT_TTS"),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     private val lifecycleRegistry = androidx.lifecycle.LifecycleRegistry(this)
@@ -293,6 +313,10 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
         lifecycleRegistry.handleLifecycleEvent(androidx.lifecycle.Lifecycle.Event.ON_STOP)
 
         // Clean up audio resources
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
+        stopThinkingSound()
+        stopAuxiliarySpeech()
         abandonAudioFocus()
         SessionForegroundService.stop(context)
         scope.cancel()
@@ -307,9 +331,17 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
     override fun onDestroy() {
         super.onDestroy()
         lifecycleRegistry.handleLifecycleEvent(androidx.lifecycle.Lifecycle.Event.ON_DESTROY)
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
+        stopThinkingSound()
+        stopAuxiliarySpeech()
         
         // Resume Hotword (safety)
         sendResumeBroadcast()
+        try {
+            context.unregisterReceiver(interruptReceiver)
+        } catch (_: Exception) {
+        }
 
         SessionForegroundService.stop(context)
         ttsManager.shutdown()
@@ -336,10 +368,11 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
     private var listeningJob: Job? = null
     private var speakingJob: Job? = null
 
-    private fun startListening() {
+    private fun startListening(initialDelayMs: Long = 50L) {
         Log.d(TAG, "startListening() called, currentState=${currentState.value}, listeningJob=${listeningJob}, speakingJob=${speakingJob}")
         listeningJob?.cancel()
         acquireWakeLock()
+        sendPauseBroadcast()
         
         currentState.value = AssistantState.PROCESSING
         displayText.value = ""
@@ -352,8 +385,8 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
             val startTime = System.currentTimeMillis()
             var hasActuallySpoken = false
             
-            // Wait for resources - Reduced from 500ms as we now reuse SpeechRecognizer
-            delay(50)
+            // Wait for resources to be released before reopening the mic
+            delay(initialDelayMs)
 
             while (isActive && !hasActuallySpoken) {
                 // Request audio focus
@@ -409,9 +442,12 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
 
                                 if (isTimeout && settings.continuousMode && elapsed < 10000) {
                                     Log.d(TAG, "Speech timeout within 10s window ($elapsed ms), retrying...")
-                                } else if (result.code == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
+                                } else if (
+                                    result.code == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
+                                    result.code == SpeechRecognizer.ERROR_CLIENT
+                                ) {
                                     speechManager.destroy()
-                                    delay(1000)
+                                    delay(500)
                                 } else if (isTimeout) {
                                     // Timeout - close session without error screen
                                     // But only if AI is not currently thinking or speaking
@@ -481,6 +517,11 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
         startThinkingSound()
         displayText.value = ""
 
+        // 相槌フレーズの再生（LLMへのリクエストと並行して実行）
+        if (settings.fillerPhrasesEnabled) {
+            scheduleInitialFillerPhrase()
+        }
+
         scope.launch {
             // Save user message to local DB only for HTTP mode
             if (settings.wakewordConnectionType != SettingsRepository.CONNECTION_TYPE_GATEWAY) {
@@ -497,9 +538,91 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
         }
     }
 
+    private var waitPhraseJob: Job? = null
+
+    private fun scheduleInitialFillerPhrase() {
+        cancelInitialFillerPhrase()
+        if (!settings.fillerPhrasesEnabled || !settings.ttsEnabled) return
+        initialFillerPhraseJob = scope.launch {
+            delay(INITIAL_FILLER_DELAY_MS)
+            if (currentState.value == AssistantState.THINKING && isActive) {
+                playFillerPhrase()
+            }
+        }
+    }
+
+    private fun cancelInitialFillerPhrase() {
+        initialFillerPhraseJob?.cancel()
+        initialFillerPhraseJob = null
+    }
+
+    private fun startWaitPhraseTimer() {
+        waitPhraseJob?.cancel()
+        if (!settings.fillerPhrasesEnabled || !settings.ttsEnabled) return
+        waitPhraseJob = scope.launch {
+            delay(5000) // 5秒待機
+            if (currentState.value == AssistantState.THINKING && isActive) {
+                Log.d(TAG, "Wait phrase timer triggered (> 5s). Playing wait phrase.")
+                playWaitPhrase()
+            }
+        }
+    }
+
+    private fun cancelWaitPhraseTimer() {
+        waitPhraseJob?.cancel()
+        waitPhraseJob = null
+    }
+
+    private fun playFillerPhrase() {
+        val phrase = context.getString(R.string.filler_ok)
+        
+        stopAuxiliarySpeech()
+        var playbackJob: Job? = null
+        playbackJob = scope.launch {
+            try {
+                // 相槌は progress 監視せずに即座に発話だけさせる
+                ttsManager.speakWithProgress(phrase).collect {} 
+            } catch (_: CancellationException) {
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to play filler phrase", e)
+            } finally {
+                if (auxiliarySpeechJob === playbackJob) {
+                    auxiliarySpeechJob = null
+                }
+            }
+        }
+        auxiliarySpeechJob = playbackJob
+    }
+
+    private fun playWaitPhrase() {
+        val waitPhrases = listOf(
+            context.getString(R.string.wait_phrase_let_me_think),
+            context.getString(R.string.wait_phrase_one_moment),
+            context.getString(R.string.wait_phrase_checking)
+        )
+        val phrase = waitPhrases.random()
+        
+        stopAuxiliarySpeech()
+        var playbackJob: Job? = null
+        playbackJob = scope.launch {
+            try {
+                ttsManager.speakWithProgress(phrase).collect {}
+            } catch (_: CancellationException) {
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to play wait phrase", e)
+            } finally {
+                if (auxiliarySpeechJob === playbackJob) {
+                    auxiliarySpeechJob = null
+                }
+            }
+        }
+        auxiliarySpeechJob = playbackJob
+    }
+
     private suspend fun sendViaGateway(message: String) {
         val nodeRuntime = (context.applicationContext as OpenClawApplication).nodeRuntime
         if (!nodeRuntime.chatHealthOk.value) {
+            cancelInitialFillerPhrase()
             stopThinkingSound()
             currentState.value = AssistantState.ERROR
             errorMessage.value = context.getString(R.string.error_gateway_not_connected)
@@ -508,6 +631,8 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
 
         try {
             val assistantCountBefore = nodeRuntime.chatMessages.value.count { it.role == "assistant" }
+
+            startWaitPhraseTimer() // 待ちフレーズのタイマー開始
 
             nodeRuntime.sendChat(
                 message = message,
@@ -526,16 +651,21 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
                     ?.content?.firstOrNull { it.type == "text" }?.text
             }
 
+            cancelWaitPhraseTimer()
+
             if (responseText != null) {
                 displayText.value = responseText
                 handleResponseReceived(responseText)
             } else {
+                cancelInitialFillerPhrase()
                 stopThinkingSound()
                 currentState.value = AssistantState.ERROR
                 errorMessage.value = context.getString(R.string.error_no_response)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Gateway error", e)
+            cancelInitialFillerPhrase()
+            cancelWaitPhraseTimer()
             stopThinkingSound()
             currentState.value = AssistantState.ERROR
             errorMessage.value = e.message ?: context.getString(R.string.error_network)
@@ -544,6 +674,9 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
 
     private suspend fun sendViaHttp(message: String) {
         val agentId = settings.defaultAgentId.takeIf { it.isNotBlank() && it != "main" }
+        
+        startWaitPhraseTimer()
+        
         val result = apiClient.sendMessage(
             httpUrl = settings.getChatCompletionsUrl(),
             message = message,
@@ -552,6 +685,8 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
             agentId = agentId
         )
 
+        cancelWaitPhraseTimer()
+
         result.fold(
             onSuccess = { response ->
                 val responseText = response.getResponseText()
@@ -559,10 +694,12 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
                     displayText.value = responseText
                     handleResponseReceived(responseText)
                 } else if (response.error != null) {
+                    cancelInitialFillerPhrase()
                     stopThinkingSound()
                     currentState.value = AssistantState.ERROR
                     errorMessage.value = response.error
                 } else {
+                    cancelInitialFillerPhrase()
                     stopThinkingSound()
                     currentState.value = AssistantState.ERROR
                     errorMessage.value = context.getString(R.string.error_no_response)
@@ -570,6 +707,7 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
             },
             onFailure = { error ->
                 Log.e(TAG, "API error", error)
+                cancelInitialFillerPhrase()
                 stopThinkingSound()
                 currentState.value = AssistantState.ERROR
                 errorMessage.value = error.message ?: context.getString(R.string.error_network)
@@ -578,6 +716,9 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
     }
 
     private suspend fun handleResponseReceived(responseText: String) {
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
+        stopAuxiliarySpeech()
 
         // Save AI response to local DB only for HTTP mode
         if (settings.wakewordConnectionType != SettingsRepository.CONNECTION_TYPE_GATEWAY) {
@@ -602,11 +743,25 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
     }
 
     private fun interruptAndListen() {
+        cancelInitialFillerPhrase()
+        cancelWaitPhraseTimer()
+        stopThinkingSound()
+        stopAuxiliarySpeech()
+        listeningJob?.cancel()
+        sendPauseBroadcast()
+        ignoreNextTtsStop = true
         ttsManager.stop()
         speakingJob?.cancel()
         speakingJob = null
-        currentState.value = AssistantState.IDLE
-        startListening()
+        speechManager.destroy()
+        abandonAudioFocus()
+        currentState.value = AssistantState.PROCESSING
+        partialText.value = ""
+        errorMessage.value = null
+        scope.launch {
+            delay(INTERRUPT_LISTEN_DELAY_MS)
+            startListening()
+        }
     }
 
     private fun speakResponse(text: String) {
@@ -616,6 +771,7 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
         val cleanText = TTSUtils.stripMarkdownForSpeech(text)
 
         speakingJob = scope.launch {
+            ignoreNextTtsStop = false
             try {
                 val maxLen = minOf(TTSUtils.getMaxInputLength(null), 1000)
                 val chunks = TTSUtils.splitTextForTTS(cleanText, maxLen)
@@ -632,12 +788,20 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
                                 Log.d(TAG, "TTS Speaking")
                                 stopThinkingSound()
                                 currentState.value = AssistantState.SPEAKING
+                                // Barge-inが有効な場合、読み上げ開始時にHotwordServiceを再開する
+                                if (settings.ttsBargeInEnabled) {
+                                    sendResumeBroadcast()
+                                }
                             }
                             is TTSState.Done -> {
                                 Log.d(TAG, "TTS Done")
                                 chunkSuccess = true
                             }
                             is TTSState.Error -> {
+                                if (ignoreNextTtsStop) {
+                                    Log.d(TAG, "Ignoring TTS stop during controlled interruption")
+                                    return@collect
+                                }
                                 Log.e(TAG, "TTS Error: ${state.message}")
                                 chunkSuccess = false
                             }
@@ -649,8 +813,20 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
                     }
                 }
 
-                // Abandon audio focus after TTS completes
+                // abandonAudioFocus() : 連続対話やBarge-in対応のため、ここでは即座にfocusを捨てない運用にするか、
+                // 次のアクション(マイクの起動等)まで保持しておく選択もある。
+                // 既存の挙動を尊重し一旦残す
                 abandonAudioFocus()
+
+                // 読み上げ終了時にBarge-inのために再開していたHotwordServiceを再度一時停止させる
+                // (この後すぐにlisteningに入る場合はそちらでpauseされるが念のため)
+                if (settings.ttsBargeInEnabled && !settings.continuousMode) {
+                    sendPauseBroadcast()
+                }
+
+                if (ignoreNextTtsStop) {
+                    return@launch
+                }
 
                 if (success) {
                     // After speech completion, if continuous conversation mode is enabled, start listening again
@@ -668,13 +844,29 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
                     currentState.value = AssistantState.ERROR
                     errorMessage.value = context.getString(R.string.error_speech_general)
                 }
+            } catch (e: CancellationException) {
+                if (!ignoreNextTtsStop) {
+                    throw e
+                }
             } catch (e: Exception) {
+                if (ignoreNextTtsStop) {
+                    return@launch
+                }
                 Log.e(TAG, "TTS speak error", e)
                 abandonAudioFocus()
                 releaseWakeLock()
                 currentState.value = AssistantState.ERROR
                 errorMessage.value = context.getString(R.string.error_speech_general)
             }
+        }
+    }
+
+    private fun stopAuxiliarySpeech() {
+        val hadActiveAuxSpeech = auxiliarySpeechJob?.isActive == true
+        auxiliarySpeechJob?.cancel()
+        auxiliarySpeechJob = null
+        if (hadActiveAuxSpeech) {
+            ttsManager.stop()
         }
     }
 

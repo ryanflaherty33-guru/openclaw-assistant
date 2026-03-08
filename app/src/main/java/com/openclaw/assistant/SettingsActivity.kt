@@ -254,6 +254,8 @@ fun SettingsScreen(
     var speechLanguage by rememberSaveable { mutableStateOf(settings.speechLanguage) }
     var appLanguage by rememberSaveable { mutableStateOf(settings.appLanguage) }
     var thinkingSoundEnabled by rememberSaveable { mutableStateOf(settings.thinkingSoundEnabled) }
+    var fillerPhrasesEnabled by rememberSaveable { mutableStateOf(settings.fillerPhrasesEnabled) }
+    var ttsBargeInEnabled by rememberSaveable { mutableStateOf(settings.ttsBargeInEnabled) }
 
     var showAuthToken by rememberSaveable { mutableStateOf(false) }
     var showWakeWordMenu by rememberSaveable { mutableStateOf(false) }
@@ -464,6 +466,8 @@ fun SettingsScreen(
                             settings.speechLanguage = speechLanguage
                             settings.appLanguage = appLanguage
                             settings.thinkingSoundEnabled = thinkingSoundEnabled
+                            settings.fillerPhrasesEnabled = fillerPhrasesEnabled
+                            settings.ttsBargeInEnabled = ttsBargeInEnabled
                             applyAppLanguage(appLanguage)
 
                             // Stop/Restart services
@@ -1218,6 +1222,20 @@ fun SettingsScreen(
                         }
                         Switch(checked = thinkingSoundEnabled, onCheckedChange = { thinkingSoundEnabled = it })
                     }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
+
+                    // Filler Phrases
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.filler_phrases), style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.filler_phrases_desc), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
+                        Switch(checked = fillerPhrasesEnabled, onCheckedChange = { fillerPhrasesEnabled = it })
+                    }
                 }
             }
 
@@ -1248,6 +1266,20 @@ fun SettingsScreen(
                             Text(stringResource(R.string.auto_start_mic), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         }
                         Switch(checked = continuousMode, onCheckedChange = { continuousMode = it })
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.tts_barge_in), style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.tts_barge_in_desc), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
+                        Switch(checked = ttsBargeInEnabled, onCheckedChange = { ttsBargeInEnabled = it })
                     }
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)

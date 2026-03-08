@@ -170,6 +170,23 @@
 <string name="speech_language_loading">Загрузка языков…</string>
 <string name="thinking_sound">Звук мышления</string>
 <string name="thinking_sound_desc">Воспроизводить звук, пока ИИ думает</string>
+
+    <!-- Filler Phrases & Barge-in -->
+    <string name="filler_phrases">Фразы-заполнители</string>
+    <string name="filler_phrases_desc">Воспроизводить короткие подтверждения, пока ИИ думает</string>
+    <string name="tts_barge_in">Прерывание голосом</string>
+    <string name="tts_barge_in_desc">Произнесите фразу активации во время речи, чтобы прервать</string>
+
+    <!-- Filler phrase content (spoken by TTS) -->
+    <string name="filler_hmm">Хмм</string>
+    <string name="filler_got_it">Понятно</string>
+    <string name="filler_i_see">Ясно</string>
+    <string name="filler_right">Хорошо</string>
+    <string name="filler_ok">OK</string>
+    <string name="wait_phrase_let_me_think">Дай подумать…</string>
+    <string name="wait_phrase_one_moment">Один момент…</string>
+    <string name="wait_phrase_checking">Я проверю…</string>
+
 <string name="activation_phrase">Фраза активации</string>
 <string name="custom_wake_word">Пользовательское слово пробуждения</string>
 <string name="custom_wake_word_hint">e.g., эй, приятель</string>
