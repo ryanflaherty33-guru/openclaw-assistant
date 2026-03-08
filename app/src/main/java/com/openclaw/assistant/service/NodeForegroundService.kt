@@ -171,11 +171,12 @@ class NodeForegroundService : Service() {
 
     lastRequiresMic = requiresMic
     
-    var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+    var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
+        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
     if (requiresMic) {
         types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
     }
-    
+
     startForeground(NOTIFICATION_ID, notification, types)
     didStartForeground = true
   }

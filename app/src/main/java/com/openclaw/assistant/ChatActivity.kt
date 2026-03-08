@@ -95,6 +95,7 @@ class ChatActivity : ComponentActivity() {
 
     private val viewModel: ChatViewModel by viewModels()
     private lateinit var settings: SettingsRepository
+    private lateinit var screenCaptureRequester: ScreenCaptureRequester
     private var hasResumedOnce = false
 
     private val permissionLauncher = registerForActivityResult(
@@ -124,6 +125,7 @@ class ChatActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settings = SettingsRepository.getInstance(this)
+        screenCaptureRequester = ScreenCaptureRequester(this)
 
         // Select specific session if provided via Intent (must be before setContent)
         val extraTitle = intent.getStringExtra(EXTRA_SESSION_TITLE)
@@ -190,6 +192,7 @@ class ChatActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        (application as OpenClawApplication).nodeRuntime.screenRecorder.attachScreenCaptureRequester(screenCaptureRequester)
         // Pause hotword detection while this activity holds the mic.
         // setPackage is required to reach NodeForegroundService (RECEIVER_NOT_EXPORTED).
         sendBroadcast(Intent(HotwordService.ACTION_PAUSE_HOTWORD).apply { setPackage(packageName) })
