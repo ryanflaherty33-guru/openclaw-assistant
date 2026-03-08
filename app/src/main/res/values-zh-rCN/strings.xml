@@ -178,10 +178,6 @@
     <string name="tts_barge_in_desc">在朗读过程中说出唤醒词打断并说话</string>
 
     <!-- Filler phrase content (spoken by TTS) -->
-    <string name="filler_hmm">嗯</string>
-    <string name="filler_got_it">明白</string>
-    <string name="filler_i_see">了解</string>
-    <string name="filler_right">好的</string>
     <string name="filler_ok">OK</string>
     <string name="wait_phrase_let_me_think">让我想想…</string>
     <string name="wait_phrase_one_moment">稍等一下…</string>

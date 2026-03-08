@@ -178,10 +178,6 @@
     <string name="tts_barge_in_desc">Произнесите фразу активации во время речи, чтобы прервать</string>
 
     <!-- Filler phrase content (spoken by TTS) -->
-    <string name="filler_hmm">Хмм</string>
-    <string name="filler_got_it">Понятно</string>
-    <string name="filler_i_see">Ясно</string>
-    <string name="filler_right">Хорошо</string>
     <string name="filler_ok">OK</string>
     <string name="wait_phrase_let_me_think">Дай подумать…</string>
     <string name="wait_phrase_one_moment">Один момент…</string>

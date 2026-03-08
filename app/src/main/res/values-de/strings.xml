@@ -177,10 +177,6 @@ Weitere Informationen finden Sie auf der offiziellen Website von VOICEVOX.</stri
     <string name="tts_barge_in_desc">Aktivierungswort während der Sprachausgabe sagen, um zu unterbrechen</string>
 
     <!-- Filler phrase content (spoken by TTS) -->
-    <string name="filler_hmm">Hmm</string>
-    <string name="filler_got_it">Verstehe</string>
-    <string name="filler_i_see">Aha</string>
-    <string name="filler_right">Genau</string>
     <string name="filler_ok">OK</string>
     <string name="wait_phrase_let_me_think">Lass mich nachdenken…</string>
     <string name="wait_phrase_one_moment">Einen Moment…</string>
