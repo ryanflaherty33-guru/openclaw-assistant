@@ -377,6 +377,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onResume() {
         super.onResume()
+        (applicationContext as OpenClawApplication).nodeRuntime.screenRecorder.attachScreenCaptureRequester(screenCaptureRequester)
         chatRefreshTrigger++
         refreshMissingPermissions()
         refreshAllPermissionsStatus()
