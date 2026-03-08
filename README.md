@@ -71,7 +71,7 @@
 - 📝 **Markdown Rendering** - Rich text display in chat messages (bold, italic, code blocks, lists, links, inline images)
 - 🩺 **Voice Diagnostics** - Built-in health check for STT/TTS engines with fix suggestions
 - ❓ **Troubleshooting Guide** - In-app help for common issues (Circle to Search, gesture navigation, etc.)
-- 🌍 **8-Language UI** - English, Japanese, Spanish, French, German, Russian, Simplified Chinese, Traditional Chinese
+- 🌍 **9-Language UI** - English, Japanese, Spanish, French, German, Hindi, Russian, Simplified Chinese, Traditional Chinese
 
 ### 📱 How to Use
 
@@ -291,7 +291,7 @@ MIT License - See [LICENSE](LICENSE) for details.
 - 📝 **Markdownレンダリング** - チャットメッセージのリッチテキスト表示（太字、斜体、コードブロック、リスト、リンク、インライン画像）
 - 🩺 **音声診断** - STT/TTSエンジンのヘルスチェックと修正提案
 - ❓ **トラブルシューティングガイド** - よくある問題のアプリ内ヘルプ（Circle to Search、ジェスチャーナビゲーションなど）
-- 🌍 **8言語対応UI** - 英語・日本語・スペイン語・フランス語・ドイツ語・ロシア語・中国語（簡体・繁体）
+- 🌍 **9言語対応UI** - 英語・日本語・スペイン語・フランス語・ドイツ語・ヒンディー語・ロシア語・中国語（簡体・繁体）
 
 ### 📱 使い方
 

@@ -15,6 +15,7 @@ import com.openclaw.assistant.speech.SpeechRecognizerManager
 import com.openclaw.assistant.speech.SpeechResult
 import com.openclaw.assistant.speech.TTSManager
 import com.openclaw.assistant.speech.TTSState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -735,17 +736,38 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private var speakingJob: kotlinx.coroutines.Job? = null
+    private val speechRequests = SpeechRequestTracker()
+
+    private fun nextSpeechRequestId(): Long = speechRequests.nextRequest()
+
+    private fun isCurrentSpeechRequest(requestId: Long): Boolean = speechRequests.isCurrent(requestId)
+
+    private fun ensureCurrentSpeechRequest(requestId: Long) {
+        if (!isCurrentSpeechRequest(requestId)) {
+            throw CancellationException("Speech request superseded")
+        }
+    }
+
+    // Wait for the previous speech job to unwind before starting replacement playback.
+    private suspend fun cancelSupersededSpeech(previousJob: Job?) {
+        _uiState.update { it.copy(isSpeaking = false, isPreparingSpeech = false) }
+        cancelAndAwaitSpeechReplacement(previousJob, stopPlayback = { ttsManager?.stop() })
+    }
 
     private fun speak(text: String) {
         val cleanText = com.openclaw.assistant.speech.TTSUtils.stripMarkdownForSpeech(text)
+        val previousJob = speakingJob
+        val requestId = nextSpeechRequestId()
         speakingJob = viewModelScope.launch {
             ignoreNextTtsStop = false
-            _uiState.update { it.copy(isPreparingSpeech = true) }
-
             try {
+                cancelSupersededSpeech(previousJob)
+                ensureCurrentSpeechRequest(requestId)
+                _uiState.update { it.copy(isPreparingSpeech = true, isSpeaking = false) }
+
                 val manager = ttsManager
                 val success = if (manager != null && manager.isReady()) {
-                    speakWithTTSManager(manager, cleanText)
+                    speakWithTTSManager(manager, cleanText, requestId)
                 } else {
                     if (manager == null) {
                         Log.e(TAG, "TTS: ttsManager is null")
@@ -755,6 +777,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     false
                 }
 
+                ensureCurrentSpeechRequest(requestId)
                 _uiState.update { it.copy(isSpeaking = false, isPreparingSpeech = false) }
 
                 if (ignoreNextTtsStop) {
@@ -768,30 +791,40 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     kotlinx.coroutines.delay(1000)
 
                     // Restart listening
+                    ensureCurrentSpeechRequest(requestId)
                     startListening()
                 } else {
                     // Conversation ended
                     releaseWakeLock()
                     sendResumeBroadcast()
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                if (!ignoreNextTtsStop) {
-                    throw e
+            } catch (e: CancellationException) {
+                if (ignoreNextTtsStop) {
+                    Log.d(TAG, "Ignoring controlled TTS cancellation (requestId=$requestId)")
+                    return@launch
                 }
+                Log.d(TAG, "TTS speak cancelled (requestId=$requestId)")
             } catch (e: Exception) {
                 if (ignoreNextTtsStop) {
                     return@launch
                 }
                 Log.e(TAG, "TTS speak error", e)
+                if (!isCurrentSpeechRequest(requestId)) {
+                    return@launch
+                }
                 _uiState.update { it.copy(isSpeaking = false, isPreparingSpeech = false) }
                 ttsManager?.stop()
                 releaseWakeLock()
                 sendResumeBroadcast()
+            } finally {
+                if (isCurrentSpeechRequest(requestId)) {
+                    speakingJob = null
+                }
             }
         }
     }
 
-    private suspend fun speakWithTTSManager(manager: TTSManager, text: String): Boolean {
+    private suspend fun speakWithTTSManager(manager: TTSManager, text: String, requestId: Long): Boolean {
         // Query the engine's actual max input length
         val engineMaxLen = com.openclaw.assistant.speech.TTSUtils.getMaxInputLength(null)
         // Further limit to 1000 for stability and consistent timeout behavior
@@ -800,7 +833,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         Log.d(TAG, "TTS splitting text (${text.length} chars) into ${chunks.size} chunks (targetMaxLen=$maxLen, engineMaxLen=$engineMaxLen)")
 
         for ((index, chunk) in chunks.withIndex()) {
-            val success = speakSingleChunkWithManager(manager, chunk)
+            ensureCurrentSpeechRequest(requestId)
+            val success = speakSingleChunkWithManager(manager, chunk, requestId)
             if (!success) {
                 Log.e(TAG, "TTS chunk $index failed, aborting remaining chunks")
                 return false
@@ -809,12 +843,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return true
     }
 
-    private suspend fun speakSingleChunkWithManager(manager: TTSManager, text: String): Boolean {
+    private suspend fun speakSingleChunkWithManager(manager: TTSManager, text: String, requestId: Long): Boolean {
         var completed = false
         var error = false
         
         try {
+            ensureCurrentSpeechRequest(requestId)
             manager.speakWithProgress(text).collect { state ->
+                ensureCurrentSpeechRequest(requestId)
                 when (state) {
                     is TTSState.Preparing -> {
                         Log.d(TAG, "TTS Preparing")
@@ -843,6 +879,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "TTS flow error", e)
             error = true
@@ -852,6 +890,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stopSpeaking() {
+        nextSpeechRequestId()
         lastInputWasVoice = false // Stop loop if manually stopped
         cancelInitialFillerPhrase()
         cancelWaitPhraseTimer()
@@ -882,6 +921,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         stopThinkingSound()
         stopAuxiliarySpeech()
         listeningJob?.cancel()
+        nextSpeechRequestId()
         ignoreNextTtsStop = true
         ttsManager?.stop()
         speakingJob?.cancel()
