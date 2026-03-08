@@ -158,7 +158,7 @@ class HotwordService : Service(), VoskRecognitionListener {
             addAction(ACTION_RESUME_HOTWORD)
             addAction(ACTION_PAUSE_HOTWORD)
         }
-        ContextCompat.registerReceiver(this, controlReceiver, filter, ContextCompat.RECEIVER_EXPORTED)
+        ContextCompat.registerReceiver(this, controlReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

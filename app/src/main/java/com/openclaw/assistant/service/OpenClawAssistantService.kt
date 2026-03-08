@@ -51,7 +51,7 @@ class OpenClawAssistantService : VoiceInteractionService() {
         super.onCreate()
         Log.e(TAG, "VoiceInteractionService onCreate")
         val filter = IntentFilter(ACTION_SHOW_ASSISTANT)
-        ContextCompat.registerReceiver(this, debugReceiver, filter, ContextCompat.RECEIVER_EXPORTED)
+        ContextCompat.registerReceiver(this, debugReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
