@@ -5,7 +5,7 @@
 
 **[日本語版はこちら](#日本語) | English below**
 
-📹 **Demo Video**: https://x.com/i/status/2017914589938438532
+📹 **Demo Video**: [https://x.com/i/status/2017914589938438532](https://x.com/monsterggg/status/2019735968216146043?s=20)
 
 ---
 
