@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import java.util.Locale
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
-
+import kotlinx.coroutines.launch
 
 /**
  * Speech Recognition Manager
@@ -176,11 +176,14 @@ class SpeechRecognizerManager(private val context: Context) {
             android.util.Log.d("SpeechRecognizerManager", "awaitClose: flow closing, destroying recognizer")
             // Destroy recognizer immediately on close to ensure clean state
             // Next startListening() will create a fresh instance
-            try {
-                currentRecognizer.cancel()
-                currentRecognizer.destroy()
-            } catch (e: Exception) {
-                android.util.Log.w("SpeechRecognizerManager", "awaitClose cleanup failed", e)
+            @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
+            kotlinx.coroutines.GlobalScope.launch(Dispatchers.Main) {
+                try {
+                    currentRecognizer.cancel()
+                    currentRecognizer.destroy()
+                } catch (e: Exception) {
+                    android.util.Log.w("SpeechRecognizerManager", "awaitClose cleanup failed", e)
+                }
             }
             recognizer = null
         }
@@ -197,10 +200,14 @@ class SpeechRecognizerManager(private val context: Context) {
      * Completely destroy the recognizer resources
      */
     fun destroy() {
-        try {
-            recognizer?.destroy()
-        } catch (e: Exception) {
-            // Ignore
+        val currentRecognizer = recognizer
+        @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
+        kotlinx.coroutines.GlobalScope.launch(Dispatchers.Main) {
+            try {
+                currentRecognizer?.destroy()
+            } catch (e: Exception) {
+                // Ignore
+            }
         }
         recognizer = null
     }
