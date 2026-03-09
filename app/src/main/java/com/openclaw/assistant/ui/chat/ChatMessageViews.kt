@@ -31,6 +31,8 @@ import com.openclaw.assistant.chat.ChatMessageContent
 import com.openclaw.assistant.chat.ChatPendingToolCall
 import com.openclaw.assistant.tools.ToolDisplayRegistry
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.openclaw.assistant.R
 
 @Composable
 fun ChatMessageBubble(message: ChatMessage) {
@@ -102,7 +104,7 @@ fun ChatTypingIndicatorBubble() {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         DotPulse()
-        Text("Thinking…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.thinking), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
       }
     }
   }
@@ -121,7 +123,13 @@ fun ChatPendingToolsBubble(toolCalls: List<ChatPendingToolCall>) {
       color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
       Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Running tools…", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+          DotPulse()
+          Text(stringResource(R.string.running_tools), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+        }
         for (display in displays.take(6)) {
           Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
