@@ -5,7 +5,19 @@
 
 **[日本語版はこちら](#日本語) | English below**
 
-📹 **Demo Video**: [https://x.com/i/status/2017914589938438532](https://x.com/monsterggg/status/2019735968216146043?s=20)
+<div align="center">
+
+### Demo
+
+<a href="https://x.com/monsterggg/status/2019735968216146043">
+  <img src="https://pbs.twimg.com/ext_tw_video_thumb/2019735943037763584/pu/img/jvM7qUNDl9LBLtu6.jpg" alt="OpenClaw Assistant Demo Video" width="270">
+</a>
+
+<p><em>Tap the image to watch the full demo video</em></p>
+
+<img src="docs/screenshot.png" alt="OpenClaw Assistant Screenshot" width="270">
+
+</div>
 
 ---
 
@@ -445,6 +457,12 @@ Pull Requests歓迎！Issues報告もお気軽に。
 ### 📄 ライセンス
 
 MIT License - 詳細は [LICENSE](LICENSE) を参照。
+
+---
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yuga-hashimoto/openclaw-assistant&type=Date)](https://star-history.com/#yuga-hashimoto/openclaw-assistant&Date)
 
 ---
 
