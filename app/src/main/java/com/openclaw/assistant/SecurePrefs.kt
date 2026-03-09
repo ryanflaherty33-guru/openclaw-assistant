@@ -21,6 +21,7 @@ class SecurePrefs(context: Context) {
     val defaultWakeWords: List<String> = listOf("openclaw", "claude")
     private const val displayNameKey = "node.displayName"
     private const val voiceWakeModeKey = "voiceWake.mode"
+    private const val locationModeKey = "location.enabledMode"
   }
 
   private val appContext = context.applicationContext
@@ -45,8 +46,7 @@ class SecurePrefs(context: Context) {
   private val _cameraEnabled = MutableStateFlow(prefs.getBoolean("camera.enabled", false))
   val cameraEnabled: StateFlow<Boolean> = _cameraEnabled
 
-  private val _locationMode =
-    MutableStateFlow(LocationMode.fromRawValue(prefs.getString("location.enabledMode", "off")))
+  private val _locationMode = MutableStateFlow(loadLocationMode())
   val locationMode: StateFlow<LocationMode> = _locationMode
 
   private val _locationPreciseEnabled =
@@ -116,7 +116,7 @@ class SecurePrefs(context: Context) {
   }
 
   fun setLocationMode(mode: LocationMode) {
-    prefs.edit { putString("location.enabledMode", mode.rawValue) }
+    prefs.edit { putString(locationModeKey, mode.rawValue) }
     _locationMode.value = mode
   }
 
@@ -233,6 +233,19 @@ class SecurePrefs(context: Context) {
     val resolved = candidate.ifEmpty { "Android Node" }
 
     prefs.edit { putString(displayNameKey, resolved) }
+    return resolved
+  }
+
+  private fun loadLocationMode(): LocationMode {
+    val raw = prefs.getString(locationModeKey, "off")
+    var resolved = LocationMode.fromRawValue(raw)
+
+    // Migrate legacy "always" value to "whileUsing"
+    if (raw?.trim()?.lowercase() == "always") {
+      resolved = LocationMode.WhileUsing
+      prefs.edit { putString(locationModeKey, resolved.rawValue) }
+    }
+
     return resolved
   }
 

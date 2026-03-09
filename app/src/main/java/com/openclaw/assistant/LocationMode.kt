@@ -3,7 +3,6 @@ package com.openclaw.assistant
 enum class LocationMode(val rawValue: String) {
     Off("off"),
     WhileUsing("whileUsing"),
-    Always("always"),
     ;
 
     companion object {

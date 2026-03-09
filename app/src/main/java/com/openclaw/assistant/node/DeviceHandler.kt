@@ -72,11 +72,6 @@ class DeviceHandler(
   fun handlePermissions(): GatewaySession.InvokeResult {
     val fineLocation = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     val coarseLocation = hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-    val backgroundLocation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-    } else {
-      fineLocation || coarseLocation
-    }
 
     val payload = buildJsonObject {
       put("camera", JsonPrimitive(hasPermission(Manifest.permission.CAMERA)))
@@ -84,7 +79,6 @@ class DeviceHandler(
       put("location", buildJsonObject {
         put("fine", JsonPrimitive(fineLocation))
         put("coarse", JsonPrimitive(coarseLocation))
-        put("background", JsonPrimitive(backgroundLocation))
       })
       put("sms", JsonPrimitive(hasPermission(Manifest.permission.SEND_SMS)))
     }
