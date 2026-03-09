@@ -2,6 +2,7 @@ package com.openclaw.assistant.utils
 
 import android.util.Base64
 import androidx.core.net.toUri
+import com.openclaw.assistant.shared.utils.NetworkUtils
 import java.util.Locale
 import org.json.JSONObject
 
@@ -43,6 +44,10 @@ object GatewayConfigUtils {
         val port = uri.port.takeIf { it in 1..65535 } ?: defaultPort
         val displayUrl = "${if (tls) "https" else "http"}://$host:$port"
 
+        if (!tls && !NetworkUtils.isUrlSecure(displayUrl)) {
+            return null
+        }
+
         return GatewayEndpointConfig(host = host, port = port, tls = tls, displayUrl = displayUrl)
     }
 
@@ -63,6 +68,7 @@ object GatewayConfigUtils {
             val obj = JSONObject(decoded)
             val url = obj.optString("url").trim()
             if (url.isEmpty()) return null
+            if (!NetworkUtils.isUrlSecure(url)) return null
             val token = obj.optString("token").trim().ifEmpty { null }
             val password = obj.optString("password").trim().ifEmpty { null }
             GatewaySetupCode(url = url, token = token, password = password)
@@ -76,6 +82,12 @@ object GatewayConfigUtils {
         val port = portInput.trim().toIntOrNull() ?: return null
         if (host.isEmpty() || port !in 1..65535) return null
         val scheme = if (tls) "https" else "http"
-        return "$scheme://$host:$port"
+        val url = "$scheme://$host:$port"
+
+        if (!tls && !NetworkUtils.isUrlSecure(url)) {
+            return null
+        }
+
+        return url
     }
 }

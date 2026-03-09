@@ -163,6 +163,8 @@ androidComponents {
 // This ensures BuildConfig.VERSION_NAME matches the real app version
 
 dependencies {
+    implementation(project(":shared"))
+
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")

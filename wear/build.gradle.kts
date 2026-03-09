@@ -46,6 +46,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared"))
+
     // Wear OS UI
     implementation("androidx.wear:wear:1.3.0")
     implementation("androidx.wear.compose:compose-material:1.3.1")

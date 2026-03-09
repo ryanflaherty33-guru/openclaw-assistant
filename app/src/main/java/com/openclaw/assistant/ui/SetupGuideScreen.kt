@@ -312,7 +312,11 @@ fun SetupGuideScreen(
                                     }
                                     // Auto-generate HTTP URL and token from gateway endpoint
                                     GatewayConfigUtils.composeGatewayManualUrl(parsed.host, parsed.port.toString(), parsed.tls)
-                                        ?.let { settings.httpUrl = it }
+                                        ?.let {
+                                            if (com.openclaw.assistant.shared.utils.NetworkUtils.isUrlSecure(it)) {
+                                                settings.httpUrl = it
+                                            }
+                                        }
                                     decoded.token?.let { settings.authToken = it }
                                         ?: decoded.password?.let { settings.authToken = it }
                                 }
@@ -326,7 +330,11 @@ fun SetupGuideScreen(
                             runtime.setGatewayPassword(manualPassword.trim())
                             // Auto-generate HTTP URL from gateway endpoint
                             GatewayConfigUtils.composeGatewayManualUrl(manualHost, manualPort, manualTls)
-                                ?.let { settings.httpUrl = it }
+                                ?.let {
+                                    if (com.openclaw.assistant.shared.utils.NetworkUtils.isUrlSecure(it)) {
+                                        settings.httpUrl = it
+                                    }
+                                }
                             // Set HTTP auth token from manual input
                             if (authToken.isNotBlank()) settings.authToken = authToken.trim()
                             else if (manualPassword.isNotBlank()) settings.authToken = manualPassword.trim()

@@ -441,7 +441,11 @@ fun SettingsScreen(
                             }
 
                             // Save HTTP Settings
-                            settings.httpUrl = httpInputUrl.trim()
+                            if (httpInputUrl.trim().isNotBlank() && !com.openclaw.assistant.shared.utils.NetworkUtils.isUrlSecure(httpInputUrl.trim())) {
+                                testResult = TestResult(success = false, message = "Insecure URL: Only HTTPS or local HTTP allowed.")
+                            } else {
+                                settings.httpUrl = httpInputUrl.trim()
+                            }
                             settings.authToken = httpToken.trim()
                             settings.httpIgnoreSslErrors = httpIgnoreSslErrors
 
@@ -904,7 +908,11 @@ fun SettingsScreen(
                             // Test Connection Button
                             Button(
                                 onClick = {
-                                    if (httpUrl.isBlank()) return@Button
+                                    if (httpInputUrl.isBlank()) return@Button
+                                    if (!com.openclaw.assistant.shared.utils.NetworkUtils.isUrlSecure(httpInputUrl.trim())) {
+                                        testResult = TestResult(success = false, message = "Insecure URL: Only HTTPS or local HTTP allowed.")
+                                        return@Button
+                                    }
                                     scope.launch {
                                         try {
                                             isTesting = true
