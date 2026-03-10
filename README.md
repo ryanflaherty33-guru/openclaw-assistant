@@ -14,9 +14,6 @@
 </a>
 
 <p><em>Tap the image to watch the full demo video</em></p>
-
-<img src="docs/screenshot.png" alt="OpenClaw Assistant Screenshot" width="270">
-
 </div>
 
 ---
