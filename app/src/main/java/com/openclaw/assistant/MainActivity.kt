@@ -37,8 +37,10 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.animation.core.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -990,10 +992,23 @@ fun SystemStatusCard(
     onDisconnect: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
+    val isConnecting = statusText.contains("Connecting", ignoreCase = true)
+
     val backgroundColor = if (connected) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
     val contentColor = if (connected) Color(0xFF1B5E20) else Color(0xFFB71C1C)
     val statusLabelColor = if (connected) Color(0xFF2E7D32) else Color(0xFFC62828)
-    val statusDotColor = if (connected) Color(0xFF4CAF50) else Color(0xFFF44336)
+    val statusDotColor = if (connected) Color(0xFF4CAF50) else if (isConnecting) Color(0xFFFFA726) else Color(0xFFF44336)
+
+    val transition = rememberInfiniteTransition(label = "pulse")
+    val dotAlpha by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (isConnecting) 0.3f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotAlpha"
+    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1009,6 +1024,7 @@ fun SystemStatusCard(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
+                        .alpha(dotAlpha)
                         .background(statusDotColor)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
