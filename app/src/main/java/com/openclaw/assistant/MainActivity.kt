@@ -1025,7 +1025,7 @@ fun SystemStatusCard(
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onOpenSettings, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings", tint = contentColor.copy(alpha = 0.6f))
+                    Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_title), tint = contentColor.copy(alpha = 0.6f))
                 }
             }
 
