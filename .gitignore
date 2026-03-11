@@ -13,3 +13,6 @@ firebase-debug.log
 
 # Agent instructions
 AGENTS.md
+
+# Claude Code settings
+.claude/
