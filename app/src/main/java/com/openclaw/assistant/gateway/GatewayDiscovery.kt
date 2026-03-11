@@ -196,8 +196,10 @@ class GatewayDiscovery(
     return "${serviceType}|${domain}|${normalizeName(serviceName)}"
   }
 
+  private val whitespaceRegex = Regex("\\s+")
+
   private fun normalizeName(raw: String): String {
-    return raw.trim().split(Regex("\\s+")).joinToString(" ")
+    return raw.trim().split(whitespaceRegex).joinToString(" ")
   }
 
   private fun txt(info: NsdServiceInfo, key: String): String? {

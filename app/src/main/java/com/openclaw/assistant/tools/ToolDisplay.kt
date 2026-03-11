@@ -127,7 +127,7 @@ object ToolDisplayRegistry {
         val cleaned = name.replace("_", " ").trim()
         if (cleaned.isEmpty()) return "Tool"
         return cleaned
-            .split(Regex("\\s+"))
+            .split(whitespaceRegex)
             .joinToString(" ") { part ->
                 val upper = part.uppercase()
                 if (part.length <= 2 && part == upper) part
@@ -205,8 +205,8 @@ object ToolDisplayRegistry {
             ?: System.getenv("HOME")?.takeIf { it.isNotBlank() }
         if (home.isNullOrEmpty()) return value
         return value.replace(home, "~")
-            .replace(Regex("/Users/[^/]+"), "~")
-            .replace(Regex("/home/[^/]+"), "~")
+            .replace(macOsHomeRegex, "~")
+            .replace(linuxHomeRegex, "~")
     }
 
     private fun JsonElement?.asStringOrNull(): String? {
@@ -219,4 +219,7 @@ object ToolDisplayRegistry {
         val raw = primitive.contentOrNull ?: return null
         return raw.toDoubleOrNull()
     }
+    private val whitespaceRegex = Regex("\\s+")
+    private val macOsHomeRegex = Regex("/Users/[^/]+")
+    private val linuxHomeRegex = Regex("/home/[^/]+")
 }

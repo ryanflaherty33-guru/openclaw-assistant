@@ -12,6 +12,21 @@ object TTSUtils {
     private const val TAG = "TTSUtils"
     const val GOOGLE_TTS_PACKAGE = "com.google.android.tts"
 
+    private val REGEX_CODE_BLOCK_START = Regex("```.*\\n?")
+    private val REGEX_CODE_BLOCK_END = Regex("```")
+    private val REGEX_HEADER = Regex("^#{1,6}\\s+", RegexOption.MULTILINE)
+    private val REGEX_BOLD_ASTERISK = Regex("\\*\\*([^*]+)\\*\\*")
+    private val REGEX_ITALIC_ASTERISK = Regex("\\*([^*]+)\\*")
+    private val REGEX_BOLD_UNDERSCORE = Regex("__([^_]+)__")
+    private val REGEX_ITALIC_UNDERSCORE = Regex("_([^_]+)_")
+    private val REGEX_INLINE_CODE = Regex("`([^`]+)`")
+    private val REGEX_LINK = Regex("\\[([^\\]]+)]\\([^)]+\\)")
+    private val REGEX_IMAGE = Regex("!\\[([^\\]]*)]\\([^)]+\\)")
+    private val REGEX_HR = Regex("^[-*_]{3,}$", RegexOption.MULTILINE)
+    private val REGEX_BLOCKQUOTE = Regex("^>\\s?", RegexOption.MULTILINE)
+    private val REGEX_BULLET = Regex("^\\s*[-*+]\\s+", RegexOption.MULTILINE)
+    private val REGEX_NEWLINE = Regex("\n{3,}")
+
     /**
      * Setup locale and high-quality voice
      */
@@ -80,41 +95,41 @@ object TTSUtils {
         // Adjustments like removing backticks and the first line (language name) for cases with language specification (```kotlin ...) are needed, but
         // simplify by just removing backticks and reading the content. Or should it say "code block"?
         // According to user request "read everything except symbols", keep the content.
-        result = result.replace(Regex("```.*\\n?"), "") // Remove starting ```language
-        result = result.replace(Regex("```"), "")       // Remove ending ```
+        result = result.replace(REGEX_CODE_BLOCK_START, "") // Remove starting ```language
+        result = result.replace(REGEX_CODE_BLOCK_END, "")       // Remove ending ```
 
         // Remove headers (# ## ### etc.)
-        result = result.replace(Regex("^#{1,6}\\s+", RegexOption.MULTILINE), "")
+        result = result.replace(REGEX_HEADER, "")
         
         // Bold/Italic (**text**, *text*, __text__, _text_)
-        result = result.replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")
-        result = result.replace(Regex("\\*([^*]+)\\*"), "$1")
-        result = result.replace(Regex("__([^_]+)__"), "$1")
-        result = result.replace(Regex("_([^_]+)_"), "$1")
+        result = result.replace(REGEX_BOLD_ASTERISK, "$1")
+        result = result.replace(REGEX_ITALIC_ASTERISK, "$1")
+        result = result.replace(REGEX_BOLD_UNDERSCORE, "$1")
+        result = result.replace(REGEX_ITALIC_UNDERSCORE, "$1")
         
         // Inline code (code)
-        result = result.replace(Regex("`([^`]+)`"), "$1")
+        result = result.replace(REGEX_INLINE_CODE, "$1")
         
         // Link [text](url) → text
-        result = result.replace(Regex("\\[([^\\]]+)]\\([^)]+\\)"), "$1")
+        result = result.replace(REGEX_LINK, "$1")
         
         // Image ![alt](url) → alt
-        result = result.replace(Regex("!\\[([^\\]]*)]\\([^)]+\\)"), "$1")
+        result = result.replace(REGEX_IMAGE, "$1")
         
         // Horizontal rule (---, ***) -> Remove
-        result = result.replace(Regex("^[-*_]{3,}$", RegexOption.MULTILINE), "")
+        result = result.replace(REGEX_HR, "")
         
         // Blockquote (>)
-        result = result.replace(Regex("^>\\s?", RegexOption.MULTILINE), "")
+        result = result.replace(REGEX_BLOCKQUOTE, "")
         
         // Bullet point markers (-, *, +)
-        result = result.replace(Regex("^\\s*[-*+]\\s+", RegexOption.MULTILINE), "")
+        result = result.replace(REGEX_BULLET, "")
         
         // Numbered list markers (1., 2., etc.) - these might be okay to read, but keep only the numbers
-        // result = result.replace(Regex("^\\s*\\d+\\.\\s+", RegexOption.MULTILINE), "")
+        // result = result.replace(REGEX_NUMBERED_LIST, "")
         
         // Organize consecutive newlines
-        result = result.replace(Regex("\n{3,}"), "\n\n")
+        result = result.replace(REGEX_NEWLINE, "\n\n")
         
         return result.trim()
     }

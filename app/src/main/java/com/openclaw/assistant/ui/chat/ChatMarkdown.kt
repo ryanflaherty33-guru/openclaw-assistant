@@ -32,6 +32,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.openclaw.assistant.chat.ChatMarkdownPreprocessor
 
+private val BASE64_IMAGE_REGEX = Regex("data:image/([a-zA-Z0-9+.-]+);base64,([A-Za-z0-9+/=\\n\\r]+)")
+
 @Composable
 fun ChatMarkdown(text: String, textColor: Color) {
   val blocks = remember(text) { splitMarkdown(ChatMarkdownPreprocessor.preprocess(text)) }
@@ -105,12 +107,11 @@ private fun splitMarkdown(raw: String): List<ChatMarkdownBlock> {
 
 private fun splitInlineImages(text: String): List<ChatMarkdownBlock> {
   if (text.isEmpty()) return emptyList()
-  val regex = Regex("data:image/([a-zA-Z0-9+.-]+);base64,([A-Za-z0-9+/=\\n\\r]+)")
   val out = ArrayList<ChatMarkdownBlock>()
 
   var idx = 0
   while (idx < text.length) {
-    val m = regex.find(text, startIndex = idx) ?: break
+    val m = BASE64_IMAGE_REGEX.find(text, startIndex = idx) ?: break
     val start = m.range.first
     val end = m.range.last + 1
     if (start > idx) out.add(ChatMarkdownBlock.Text(text.substring(idx, start)))
