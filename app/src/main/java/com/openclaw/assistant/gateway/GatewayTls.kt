@@ -166,8 +166,10 @@ private fun sha256Hex(data: ByteArray): String {
   return out.toString()
 }
 
+private val SHA256_PREFIX_REGEX = Regex("^sha-?256\\s*:?\\s*", RegexOption.IGNORE_CASE)
+
 private fun normalizeFingerprint(raw: String): String {
   val stripped = raw.trim()
-    .replace(Regex("^sha-?256\\s*:?\\s*", RegexOption.IGNORE_CASE), "")
+    .replace(SHA256_PREFIX_REGEX, "")
   return stripped.lowercase(Locale.US).filter { it in '0'..'9' || it in 'a'..'f' }
 }

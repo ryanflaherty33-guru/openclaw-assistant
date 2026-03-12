@@ -12,6 +12,8 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
 
+private val URL_REGEX = Regex("\"url\":\"([^\"]+)\"")
+
 class CameraHandler(
   private val appContext: Context,
   private val camera: CameraCaptureManager,
@@ -136,7 +138,7 @@ class CameraHandler(
           filePayload.file.delete()
           if (!resp.isSuccessful) throw Exception("upload failed: HTTP ${resp.code}")
           // Parse URL from response
-          val urlMatch = Regex("\"url\":\"([^\"]+)\"").find(respBody)
+          val urlMatch = URL_REGEX.find(respBody)
           urlMatch?.groupValues?.get(1) ?: throw Exception("no url in response: $respBody")
         }
       } catch (err: Throwable) {
