@@ -115,9 +115,20 @@ class SystemHandler(private val appContext: Context) {
             builder.setSilent(true)
         }
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
-
-        return GatewaySession.InvokeResult.ok("""{"ok":true}""")
+        return try {
+            notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
+            GatewaySession.InvokeResult.ok("""{"ok":true}""")
+        } catch (_: SecurityException) {
+            GatewaySession.InvokeResult.error(
+                code = "NOT_AUTHORIZED",
+                message = "NOT_AUTHORIZED: notifications",
+            )
+        } catch (err: Throwable) {
+            GatewaySession.InvokeResult.error(
+                code = "UNAVAILABLE",
+                message = "UNAVAILABLE: error posting notification",
+            )
+        }
     }
 
     fun handleVolume(paramsJson: String?): GatewaySession.InvokeResult {
