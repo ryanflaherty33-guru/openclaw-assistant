@@ -661,7 +661,7 @@ fun SettingsScreen(
                                         IconButton(onClick = { showNodeToken = !showNodeToken }) {
                                             Icon(
                                                 if (showNodeToken) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                                contentDescription = null
+                                                contentDescription = if (showNodeToken) "Hide token" else "Show token"
                                             )
                                         }
                                     },
@@ -678,7 +678,7 @@ fun SettingsScreen(
                                         IconButton(onClick = { showGatewayPassword = !showGatewayPassword }) {
                                             Icon(
                                                 if (showGatewayPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                                contentDescription = null
+                                                contentDescription = if (showGatewayPassword) "Hide password" else "Show password"
                                             )
                                         }
                                     },
@@ -731,7 +731,7 @@ fun SettingsScreen(
                                     IconButton(onClick = { showNodeToken = !showNodeToken }) {
                                         Icon(
                                             if (showNodeToken) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                            contentDescription = null
+                                            contentDescription = if (showNodeToken) "Hide token" else "Show token"
                                         )
                                     }
                                 },
@@ -2021,7 +2021,7 @@ fun OpenAISettingsCard(
                     IconButton(onClick = { onShowApiKeyChange(!showApiKey) }) {
                         Icon(
                             if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = null
+                            contentDescription = if (showApiKey) "Hide API Key" else "Show API Key"
                         )
                     }
                 },
