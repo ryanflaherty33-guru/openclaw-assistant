@@ -23,6 +23,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
@@ -215,10 +222,43 @@ private fun ChatBase64Image(base64: String, mimeType: String?) {
 
 @Composable
 private fun DotPulse() {
+  val transition = rememberInfiniteTransition(label = "dot_pulse")
+
+  val alpha0 by transition.animateFloat(
+    initialValue = 0.3f,
+    targetValue = 1f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(600),
+      repeatMode = RepeatMode.Reverse,
+      initialStartOffset = StartOffset(0)
+    ),
+    label = "dot_alpha_0"
+  )
+  val alpha1 by transition.animateFloat(
+    initialValue = 0.3f,
+    targetValue = 1f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(600),
+      repeatMode = RepeatMode.Reverse,
+      initialStartOffset = StartOffset(200)
+    ),
+    label = "dot_alpha_1"
+  )
+  val alpha2 by transition.animateFloat(
+    initialValue = 0.3f,
+    targetValue = 1f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(600),
+      repeatMode = RepeatMode.Reverse,
+      initialStartOffset = StartOffset(400)
+    ),
+    label = "dot_alpha_2"
+  )
+
   Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
-    PulseDot(alpha = 0.38f)
-    PulseDot(alpha = 0.62f)
-    PulseDot(alpha = 0.90f)
+    PulseDot(alpha = alpha0)
+    PulseDot(alpha = alpha1)
+    PulseDot(alpha = alpha2)
   }
 }
 
