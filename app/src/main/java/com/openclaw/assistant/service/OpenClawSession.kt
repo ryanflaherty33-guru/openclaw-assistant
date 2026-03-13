@@ -373,13 +373,23 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
         listeningJob?.cancel()
         acquireWakeLock()
         sendPauseBroadcast()
-        
+
         currentState.value = AssistantState.PROCESSING
         displayText.value = ""
         userQuery.value = ""
         partialText.value = ""
         errorMessage.value = null
         audioLevel.value = 0f
+
+        // Fallback: if SpeechResult.Ready doesn't arrive within 2s, force LISTENING
+        // so users don't see "Processing" indefinitely while the recognizer warms up
+        scope.launch {
+            delay(2000L)
+            if (currentState.value == AssistantState.PROCESSING) {
+                Log.w(TAG, "SpeechResult.Ready timeout — forcing LISTENING state")
+                currentState.value = AssistantState.LISTENING
+            }
+        }
 
         listeningJob = scope.launch {
             val startTime = System.currentTimeMillis()

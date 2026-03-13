@@ -196,6 +196,8 @@
 <string name="wake_word_jarvis">Джарвис</string>
 <string name="wake_word_computer">Компьютер</string>
 <string name="wake_word_custom">Пользовательский…</string>
+<string name="wake_word_sensitivity">Чувствительность обнаружения</string>
+<string name="wake_word_sensitivity_desc">Более высокие значения требуют большей уверенности для срабатывания. Уменьшите, если слово не распознаётся; увеличьте, если срабатывает слишком легко.</string>
 <string name="mic_permission_rationale_title">Требуется разрешение микрофона</string>
 <string name="mic_permission_rationale_message">Для обнаружения слов требуется доступ к микрофону для прослушивания вашей голосовой команды. Без этого разрешения обнаружение слов пробуждения не может работать.\n\nПожалуйста, предоставьте разрешение микрофона на следующем экране.</string>
 <string name="mic_permission_denied_title">Разрешение на использование микрофона отклонено</string>

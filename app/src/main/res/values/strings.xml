@@ -207,6 +207,8 @@
     <string name="wake_word_jarvis">Jarvis</string>
     <string name="wake_word_computer">Computer</string>
     <string name="wake_word_custom">Custom…</string>
+    <string name="wake_word_sensitivity">Detection Sensitivity</string>
+    <string name="wake_word_sensitivity_desc">Higher values require more confidence to trigger. Reduce if the wake word isn\'t detected; increase if it fires too easily.</string>
     
 
     <!-- Permission handling -->

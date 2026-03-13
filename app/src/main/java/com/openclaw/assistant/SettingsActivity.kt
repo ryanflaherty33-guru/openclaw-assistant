@@ -250,6 +250,7 @@ fun SettingsScreen(
     var resumeLatestSession by rememberSaveable { mutableStateOf(settings.resumeLatestSession) }
     var wakeWordPreset by rememberSaveable { mutableStateOf(settings.wakeWordPreset) }
     var customWakeWord by rememberSaveable { mutableStateOf(settings.customWakeWord) }
+    var wakeWordSensitivity by rememberSaveable { mutableStateOf(settings.wakeWordSensitivity) }
     var speechSilenceTimeout by rememberSaveable { mutableStateOf(settings.speechSilenceTimeout.toFloat().coerceIn(5000f, 30000f)) }
     var speechLanguage by rememberSaveable { mutableStateOf(settings.speechLanguage) }
     var appLanguage by rememberSaveable { mutableStateOf(settings.appLanguage) }
@@ -465,6 +466,7 @@ fun SettingsScreen(
                             settings.resumeLatestSession = resumeLatestSession
                             settings.wakeWordPreset = wakeWordPreset
                             settings.customWakeWord = customWakeWord
+                            settings.wakeWordSensitivity = wakeWordSensitivity
                             settings.wakewordConnectionType = wakewordConnectionType
                             settings.speechSilenceTimeout = speechSilenceTimeout.toLong()
                             settings.speechLanguage = speechLanguage
@@ -1393,7 +1395,34 @@ fun SettingsScreen(
                                 )
                             }
 
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
 
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(stringResource(R.string.wake_word_sensitivity), style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    text = "%.2f".format(wakeWordSensitivity),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Text(
+                                stringResource(R.string.wake_word_sensitivity_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                            Slider(
+                                value = wakeWordSensitivity,
+                                onValueChange = { wakeWordSensitivity = it },
+                                valueRange = 0.0f..1.0f,
+                                steps = 19,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
 

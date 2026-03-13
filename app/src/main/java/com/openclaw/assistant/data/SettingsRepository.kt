@@ -63,6 +63,11 @@ class SettingsRepository(context: Context) {
         get() = prefs.getString(KEY_CUSTOM_WAKE_WORD, "") ?: ""
         set(value) = prefs.edit().putString(KEY_CUSTOM_WAKE_WORD, value).apply()
 
+    // Wake word detection sensitivity threshold (0.0 = easiest to trigger, 1.0 = hardest)
+    var wakeWordSensitivity: Float
+        get() = prefs.getFloat(KEY_WAKE_WORD_SENSITIVITY, 0.7f)
+        set(value) = prefs.edit().putFloat(KEY_WAKE_WORD_SENSITIVITY, value.coerceIn(0.0f, 1.0f)).apply()
+
     // Get the actual wake words list for Vosk
     fun getWakeWords(): List<String> {
         return when (wakeWordPreset) {
@@ -282,6 +287,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_HOTWORD_ENABLED = "hotword_enabled"
         private const val KEY_WAKE_WORD_PRESET = "wake_word_preset"
         private const val KEY_CUSTOM_WAKE_WORD = "custom_wake_word"
+        private const val KEY_WAKE_WORD_SENSITIVITY = "wake_word_sensitivity"
         private const val KEY_IS_VERIFIED = "is_verified"
         private const val KEY_TTS_ENABLED = "tts_enabled"
         private const val KEY_CONTINUOUS_MODE = "continuous_mode"

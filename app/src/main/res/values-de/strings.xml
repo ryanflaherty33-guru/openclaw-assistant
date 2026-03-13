@@ -195,6 +195,8 @@ Weitere Informationen finden Sie auf der offiziellen Website von VOICEVOX.</stri
 <string name="wake_word_jarvis">Jarvis</string>
 <string name="wake_word_computer">Computer</string>
 <string name="wake_word_custom">Brauch…</string>
+<string name="wake_word_sensitivity">Erkennungsempfindlichkeit</string>
+<string name="wake_word_sensitivity_desc">Höhere Werte erfordern mehr Sicherheit. Verringern, wenn das Aktivierungswort nicht erkannt wird; erhöhen, wenn es zu leicht ausgelöst wird.</string>
 <string name="mic_permission_rationale_title">Mikrofonberechtigung erforderlich</string>
 <string name="mic_permission_rationale_message">Die Wake-Word-Erkennung benötigt Zugriff auf das Mikrofon, um auf Ihren Sprachbefehl zu hören. Ohne diese Berechtigung kann die Aktivierungsworterkennung nicht funktionieren.\n\nBitte erteilen Sie auf dem nächsten Bildschirm die Mikrofonberechtigung.</string>
 <string name="mic_permission_denied_title">Mikrofonberechtigung verweigert</string>

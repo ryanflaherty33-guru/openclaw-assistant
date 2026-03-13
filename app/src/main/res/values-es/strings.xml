@@ -196,6 +196,8 @@ Para más detalles, consulta el sitio oficial de VOICEVOX.</string>
 <string name="wake_word_jarvis">Jarvis</string>
 <string name="wake_word_computer">Computadora</string>
 <string name="wake_word_custom">Personalizado…</string>
+<string name="wake_word_sensitivity">Sensibilidad de detección</string>
+<string name="wake_word_sensitivity_desc">Los valores más altos requieren mayor confianza para activarse. Reduce si la palabra de activación no se detecta; aumenta si se activa con demasiada facilidad.</string>
 <string name="mic_permission_rationale_title">Se requiere permiso de micrófono</string>
 <string name="mic_permission_rationale_message">La detección de palabras de activación necesita acceso al micrófono para escuchar su comando de voz. Sin este permiso, la detección de palabras de activación no puede funcionar.\n\nConceda permiso al micrófono en la siguiente pantalla.</string>
 <string name="mic_permission_denied_title">Permiso de micrófono denegado</string>

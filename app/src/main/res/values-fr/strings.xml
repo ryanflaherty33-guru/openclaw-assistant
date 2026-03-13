@@ -196,6 +196,8 @@ Pour plus de détails, consultez le site officiel de VOICEVOX.</string>
 <string name="wake_word_jarvis">Jarvis</string>
 <string name="wake_word_computer">Ordinateur</string>
 <string name="wake_word_custom">Custom…</string>
+<string name="wake_word_sensitivity">Sensibilité de détection</string>
+<string name="wake_word_sensitivity_desc">Des valeurs plus élevées requièrent plus de confiance pour se déclencher. Réduisez si le mot de réveil n\'est pas détecté ; augmentez s\'il se déclenche trop facilement.</string>
 <string name="mic_permission_rationale_title">Autorisation du microphone requise</string>
 <string name="mic_permission_rationale_message">La détection des mots de réveil nécessite un accès au microphone pour écouter votre commande vocale. Sans cette autorisation, la détection des mots d\'activation ne peut pas fonctionner.\n\nVeuillez accorder l\'autorisation du microphone sur l\'écran suivant.</string>
 <string name="mic_permission_denied_title">Autorisation du microphone refusée</string>

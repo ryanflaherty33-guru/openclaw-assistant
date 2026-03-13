@@ -478,9 +478,9 @@ class HotwordService : Service(), VoskRecognitionListener {
         audioRetryCount = 0
 
         try {
-            // Get wake words from settings
+            // Get wake words from settings; add [unk] so Vosk can absorb non-matching speech
             val wakeWords = settings.getWakeWords()
-            val wakeWordsJson = wakeWords.joinToString("\", \"", "[\"", "\"]")
+            val wakeWordsJson = (wakeWords + "[unk]").joinToString("\", \"", "[\"", "\"]")
             Log.d(TAG, "Starting hotword detection with words: $wakeWordsJson")
 
             val rec = Recognizer(model, SAMPLE_RATE, wakeWordsJson)
@@ -513,6 +513,18 @@ class HotwordService : Service(), VoskRecognitionListener {
         }
     }
 
+    /**
+     * Parses Vosk keyword spotting confidence for [word] from result text.
+     * Vosk grammar mode returns results like "[open claw](0.92)" or plain "open claw".
+     * Returns the score (0.0–1.0), or 1.0 if plain text match, or 0.0 if not found.
+     */
+    private fun parseWakeWordConfidence(text: String, word: String): Float {
+        val pattern = Regex("\\[${Regex.escape(word)}\\]\\(([0-9.]+)\\)", RegexOption.IGNORE_CASE)
+        val match = pattern.find(text)
+        return match?.groupValues?.get(1)?.toFloatOrNull()
+            ?: if (text.contains(word, ignoreCase = true)) 1.0f else 0.0f
+    }
+
     override fun onPartialResult(hypothesis: String?) {}
 
     override fun onResult(hypothesis: String?) {
@@ -522,9 +534,11 @@ class HotwordService : Service(), VoskRecognitionListener {
                 val json = JSONObject(it)
                 val text = json.optString("text", "")
 
-                // Check against configured wake words
+                // Check against configured wake words with confidence threshold
                 val wakeWords = settings.getWakeWords()
-                val detected = wakeWords.any { word -> text.contains(word) }
+                val detected = wakeWords.any { word ->
+                    parseWakeWordConfidence(text, word) >= settings.wakeWordSensitivity
+                }
 
                 if (detected) {
                     Log.e(TAG, "Hotword detected! Text: $text")

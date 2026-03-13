@@ -196,6 +196,8 @@
 <string name="wake_word_jarvis">जार्विस</string>
 <string name="wake_word_computer">कंप्यूटर</string>
 <string name="wake_word_custom">रिवाज़…</string>
+<string name="wake_word_sensitivity">पहचान संवेदनशीलता</string>
+<string name="wake_word_sensitivity_desc">अधिक मान के लिए अधिक विश्वास की आवश्यकता होती है। यदि वेक वर्ड नहीं पकड़ा जाता तो कम करें; यदि बहुत आसानी से ट्रिगर होता है तो बढ़ाएं।</string>
 <string name="mic_permission_rationale_title">माइक्रोफ़ोन अनुमति आवश्यक है</string>
 <string name="mic_permission_rationale_message">वेक वर्ड डिटेक्शन को आपके वॉयस कमांड को सुनने के लिए माइक्रोफ़ोन एक्सेस की आवश्यकता होती है। इस अनुमति के बिना, वेक वर्ड डिटेक्शन काम नहीं कर सकता।\n\nकृपया अगली स्क्रीन पर माइक्रोफ़ोन की अनुमति दें।</string>
 <string name="mic_permission_denied_title">माइक्रोफ़ोन अनुमति अस्वीकृत</string>
