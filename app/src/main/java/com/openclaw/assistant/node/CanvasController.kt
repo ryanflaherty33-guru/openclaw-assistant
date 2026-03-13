@@ -101,7 +101,20 @@ class CanvasController {
 
   fun navigate(url: String) {
     val trimmed = url.trim()
-    this.url = if (trimmed.isBlank() || trimmed == "/") null else trimmed
+    val safeUrl = if (trimmed.isBlank() || trimmed == "/") {
+      null
+    } else {
+      val lower = trimmed.lowercase()
+      if (lower.startsWith("http://") ||
+          lower.startsWith("https://") ||
+          lower.startsWith("file:///android_asset/")) {
+        trimmed
+      } else {
+        Log.w("OpenClawCanvas", "Blocked unsafe navigation URL: $trimmed")
+        null
+      }
+    }
+    this.url = safeUrl
     _isDefaultState.value = this.url == null
     if (this.url != null) _isPageLoading.value = true
     reload()
