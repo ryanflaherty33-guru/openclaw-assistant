@@ -119,8 +119,16 @@ class NodeForegroundService : Service() {
             }
             startForeground(NOTIFICATION_ID, notification, fallbackTypes)
             lastNotification = notification
-          } catch (e2: SecurityException) {
+          } catch (e2: Exception) {
             android.util.Log.e(TAG, "startForeground fallback also failed: ${e2.message}")
+            if (lastRequiresMic) {
+              try {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+                lastNotification = notification
+              } catch (e3: Exception) {
+                android.util.Log.e(TAG, "startForeground final fallback failed: ${e3.message}")
+              }
+            }
           }
         }
         mediaProjectionReady.getAndSet(null)?.complete(Unit)
