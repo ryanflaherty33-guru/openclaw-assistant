@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SmartToy
@@ -1061,7 +1062,11 @@ fun AttachmentChip(fileName: String, onRemove: () -> Unit) {
                 onClick = onRemove,
                 modifier = Modifier.size(30.dp),
             ) {
-                Text("×")
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(R.string.delete),
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
     }
