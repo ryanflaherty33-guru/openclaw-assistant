@@ -527,4 +527,11 @@
     <string name="canvas_status_loading">Canvas読み込み中...</string>
     <string name="canvas_diag_no_canvas">AIはCanvasを使いませんでした。テキストで返答しています。\nCanvasツールが有効になっているか確認してください。</string>
     <string name="canvas_diag_not_connected">Gatewayに接続されていません。接続するとAIがCanvasを操作できます。</string>
+    <string name="media_button_enabled">ヘッドセットボタンで起動</string>
+    <string name="media_button_enabled_desc">BluetoothヘッドセットやイヤホンのボタンでAIアシスタントを起動します。ウェイクワードが有効な場合のみ機能します。</string>
+    <string name="wake_word_debug_enabled">ウェイクワード デバッグログ</string>
+    <string name="wake_word_debug_enabled_desc">ホーム画面にVosk の詳細ログを表示し、ウェイクワードの問題診断に役立てます。</string>
+    <string name="wake_word_debug_panel_title">ウェイクワード デバッグログ</string>
+    <string name="wake_word_debug_empty">Voskイベントを待機中…</string>
+    <string name="clear">クリア</string>
 </resources>

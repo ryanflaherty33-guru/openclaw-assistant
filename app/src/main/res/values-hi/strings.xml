@@ -526,4 +526,11 @@
     <!-- Capabilities -->
     <string name="none">कोई नहीं</string>
     <string name="capability_motion">गति</string>
+    <string name="media_button_enabled">हेडसेट बटन से चालू करें</string>
+    <string name="media_button_enabled_desc">Bluetooth हेडसेट या वायर्ड हेडफ़ोन का बटन दबाकर voice assistant चालू करें। Wake Word सक्षम होना आवश्यक है।</string>
+    <string name="wake_word_debug_enabled">Wake Word डीबग लॉग</string>
+    <string name="wake_word_debug_enabled_desc">Wake Word समस्याओं के निदान के लिए होम स्क्रीन पर Vosk का विस्तृत लॉग दिखाएं।</string>
+    <string name="wake_word_debug_panel_title">Wake Word डीबग लॉग</string>
+    <string name="wake_word_debug_empty">Vosk इवेंट की प्रतीक्षा में…</string>
+    <string name="clear">साफ़ करें</string>
 </resources>

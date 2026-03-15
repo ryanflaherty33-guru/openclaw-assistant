@@ -613,4 +613,11 @@
     <string name="canvas_status_loading">Loading Canvas...</string>
     <string name="canvas_diag_no_canvas">AI did not use Canvas — text response shown below.\nCanvas tools may not be available or enabled.</string>
     <string name="canvas_diag_not_connected">Not connected to Gateway. Connect to allow AI to operate Canvas.</string>
+    <string name="media_button_enabled">Headset Button Trigger</string>
+    <string name="media_button_enabled_desc">Start voice chat by pressing the button on a Bluetooth headset or wired headphones. Requires Wake Word to be enabled.</string>
+    <string name="wake_word_debug_enabled">Wake Word Debug Log</string>
+    <string name="wake_word_debug_enabled_desc">Show verbose Vosk status logs on the home screen to help diagnose wake word issues.</string>
+    <string name="wake_word_debug_panel_title">Wake Word Debug Log</string>
+    <string name="wake_word_debug_empty">Waiting for Vosk events…</string>
+    <string name="clear">Clear</string>
 </resources>

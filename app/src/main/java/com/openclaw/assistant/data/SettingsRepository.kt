@@ -204,6 +204,16 @@ class SettingsRepository(context: Context) {
         get() = prefs.getBoolean(KEY_TTS_BARGE_IN_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_TTS_BARGE_IN_ENABLED, value).apply()
 
+    // Wake word debug logging (shows verbose status on home screen)
+    var wakeWordDebugEnabled: Boolean
+        get() = prefs.getBoolean(KEY_WAKE_WORD_DEBUG_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_WAKE_WORD_DEBUG_ENABLED, value).apply()
+
+    // Trigger voice chat from media button (Bluetooth headset button, etc.)
+    var mediaButtonEnabled: Boolean
+        get() = prefs.getBoolean(KEY_MEDIA_BUTTON_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_MEDIA_BUTTON_ENABLED, value).apply()
+
     // Connection Verified
     var isVerified: Boolean
         get() = prefs.getBoolean(KEY_IS_VERIFIED, false)
@@ -304,6 +314,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_THINKING_SOUND_ENABLED = "thinking_sound_enabled"
         private const val KEY_FILLER_PHRASES_ENABLED = "filler_phrases_enabled"
         private const val KEY_TTS_BARGE_IN_ENABLED = "tts_barge_in_enabled"
+        private const val KEY_WAKE_WORD_DEBUG_ENABLED = "wake_word_debug_enabled"
+        private const val KEY_MEDIA_BUTTON_ENABLED = "media_button_enabled"
         private const val KEY_SPEECH_LANGUAGE = "speech_language"
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_HAS_COMPLETED_SETUP = "has_completed_setup"

@@ -526,4 +526,11 @@
     <!-- Capabilities -->
     <string name="none">无</string>
     <string name="capability_motion">运动</string>
+    <string name="media_button_enabled">耳机按钮触发</string>
+    <string name="media_button_enabled_desc">通过按下蓝牙耳机或有线耳机的按钮来启动语音助手。需要启用唤醒词。</string>
+    <string name="wake_word_debug_enabled">唤醒词调试日志</string>
+    <string name="wake_word_debug_enabled_desc">在主屏幕显示 Vosk 详细日志，帮助诊断唤醒词问题。</string>
+    <string name="wake_word_debug_panel_title">唤醒词调试日志</string>
+    <string name="wake_word_debug_empty">等待 Vosk 事件…</string>
+    <string name="clear">清除</string>
 </resources>

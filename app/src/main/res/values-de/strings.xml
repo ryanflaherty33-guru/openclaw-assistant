@@ -525,4 +525,11 @@ Weitere Informationen finden Sie auf der offiziellen Website von VOICEVOX.</stri
     <!-- Capabilities -->
     <string name="none">Keine</string>
     <string name="capability_motion">Bewegung</string>
+    <string name="media_button_enabled">Headset-Taste zum Aktivieren</string>
+    <string name="media_button_enabled_desc">Sprachassistenten durch Drücken der Taste eines Bluetooth-Headsets oder kabelgebundener Kopfhörer starten. Erfordert aktiviertes Wake-Word.</string>
+    <string name="wake_word_debug_enabled">Wake-Word Debug-Log</string>
+    <string name="wake_word_debug_enabled_desc">Ausführliche Vosk-Statuslogs auf dem Startbildschirm anzeigen, um Wake-Word-Probleme zu diagnostizieren.</string>
+    <string name="wake_word_debug_panel_title">Wake-Word Debug-Log</string>
+    <string name="wake_word_debug_empty">Warte auf Vosk-Ereignisse…</string>
+    <string name="clear">Leeren</string>
 </resources>

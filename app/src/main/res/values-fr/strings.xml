@@ -526,4 +526,11 @@ Pour plus de détails, consultez le site officiel de VOICEVOX.</string>
     <!-- Capabilities -->
     <string name="none">Aucun</string>
     <string name="capability_motion">Mouvement</string>
+    <string name="media_button_enabled">Déclenchement par bouton casque</string>
+    <string name="media_button_enabled_desc">Démarrez l\'assistant vocal en appuyant sur le bouton d\'un casque Bluetooth ou filaire. Nécessite l\'activation du Wake Word.</string>
+    <string name="wake_word_debug_enabled">Journal de débogage Wake Word</string>
+    <string name="wake_word_debug_enabled_desc">Affiche les journaux détaillés de Vosk sur l\'écran d\'accueil pour diagnostiquer les problèmes de Wake Word.</string>
+    <string name="wake_word_debug_panel_title">Journal de débogage Wake Word</string>
+    <string name="wake_word_debug_empty">En attente d\'événements Vosk…</string>
+    <string name="clear">Effacer</string>
 </resources>

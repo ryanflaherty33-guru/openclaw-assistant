@@ -525,4 +525,11 @@
     <!-- Capabilities -->
     <string name="none">無</string>
     <string name="capability_motion">運動</string>
+    <string name="media_button_enabled">耳機按鍵觸發</string>
+    <string name="media_button_enabled_desc">按下藍牙耳機或有線耳機的按鍵來啟動語音助理。需要啟用喚醒詞。</string>
+    <string name="wake_word_debug_enabled">喚醒詞除錯日誌</string>
+    <string name="wake_word_debug_enabled_desc">在主畫面顯示 Vosk 詳細日誌，協助診斷喚醒詞問題。</string>
+    <string name="wake_word_debug_panel_title">喚醒詞除錯日誌</string>
+    <string name="wake_word_debug_empty">等待 Vosk 事件…</string>
+    <string name="clear">清除</string>
 </resources>

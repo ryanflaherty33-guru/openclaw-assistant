@@ -526,4 +526,11 @@
     <!-- Capabilities -->
     <string name="none">Нет</string>
     <string name="capability_motion">Движение</string>
+    <string name="media_button_enabled">Запуск кнопкой гарнитуры</string>
+    <string name="media_button_enabled_desc">Запускайте голосового ассистента нажатием кнопки Bluetooth-гарнитуры или проводных наушников. Требуется включённое Wake Word.</string>
+    <string name="wake_word_debug_enabled">Журнал отладки Wake Word</string>
+    <string name="wake_word_debug_enabled_desc">Показывать подробные логи Vosk на главном экране для диагностики проблем с Wake Word.</string>
+    <string name="wake_word_debug_panel_title">Журнал отладки Wake Word</string>
+    <string name="wake_word_debug_empty">Ожидание событий Vosk…</string>
+    <string name="clear">Очистить</string>
 </resources>

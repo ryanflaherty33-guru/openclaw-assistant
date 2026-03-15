@@ -212,6 +212,15 @@
             android:name=".receiver.InstallResultReceiver"
             android:exported="false" />
 
+        <!-- Media Button Receiver (Bluetooth headset / wired headphone button) -->
+        <receiver
+            android:name=".receiver.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

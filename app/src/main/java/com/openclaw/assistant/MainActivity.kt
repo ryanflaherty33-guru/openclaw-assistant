@@ -589,6 +589,9 @@ fun MainScreen(
     val displayName by runtime.displayName.collectAsState()
     val pendingGatewayTrust by runtime.pendingGatewayTrust.collectAsState()
 
+    val wakeWordDebugEnabled by remember { derivedStateOf { settings.wakeWordDebugEnabled } }
+    val hotwordDebugLogs by com.openclaw.assistant.service.HotwordDebugLogger.logs.collectAsState()
+
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
@@ -877,8 +880,17 @@ fun MainScreen(
                 )
             }
 
+            // Wake word debug log panel
+            if (wakeWordDebugEnabled && hotwordEnabled) {
+                Spacer(modifier = Modifier.height(12.dp))
+                WakeWordDebugPanel(
+                    logs = hotwordDebugLogs,
+                    onClear = { com.openclaw.assistant.service.HotwordDebugLogger.clear() }
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             val chatContext = LocalContext.current
             Button(
                 onClick = { chatContext.startActivity(Intent(chatContext, SessionListActivity::class.java)) },
@@ -1524,4 +1536,60 @@ fun TroubleshootingDialog(onDismiss: () -> Unit) {
 @Composable
 fun BulletPoint(title: String, desc: String) {
     Column { Text("• $title", fontWeight = FontWeight.Bold, fontSize = 14.sp); Text(desc, fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(start = 12.dp)) }
+}
+
+@Composable
+fun WakeWordDebugPanel(logs: List<String>, onClear: () -> Unit) {
+    val scrollState = androidx.compose.foundation.rememberScrollState()
+    LaunchedEffect(logs.size) {
+        scrollState.animateScrollTo(scrollState.maxValue)
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    stringResource(R.string.wake_word_debug_panel_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                TextButton(onClick = onClear, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+                    Text(stringResource(R.string.clear), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 80.dp, max = 200.dp)
+                    .verticalScroll(scrollState)
+            ) {
+                if (logs.isEmpty()) {
+                    Text(
+                        stringResource(R.string.wake_word_debug_empty),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                } else {
+                    androidx.compose.foundation.text.selection.SelectionContainer {
+                        Text(
+                            logs.joinToString("\n"),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

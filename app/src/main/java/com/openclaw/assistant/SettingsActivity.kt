@@ -257,6 +257,8 @@ fun SettingsScreen(
     var thinkingSoundEnabled by rememberSaveable { mutableStateOf(settings.thinkingSoundEnabled) }
     var fillerPhrasesEnabled by rememberSaveable { mutableStateOf(settings.fillerPhrasesEnabled) }
     var ttsBargeInEnabled by rememberSaveable { mutableStateOf(settings.ttsBargeInEnabled) }
+    var wakeWordDebugEnabled by rememberSaveable { mutableStateOf(settings.wakeWordDebugEnabled) }
+    var mediaButtonEnabled by rememberSaveable { mutableStateOf(settings.mediaButtonEnabled) }
 
     var showAuthToken by rememberSaveable { mutableStateOf(false) }
     var showWakeWordMenu by rememberSaveable { mutableStateOf(false) }
@@ -474,6 +476,8 @@ fun SettingsScreen(
                             settings.thinkingSoundEnabled = thinkingSoundEnabled
                             settings.fillerPhrasesEnabled = fillerPhrasesEnabled
                             settings.ttsBargeInEnabled = ttsBargeInEnabled
+                            settings.wakeWordDebugEnabled = wakeWordDebugEnabled
+                            settings.mediaButtonEnabled = mediaButtonEnabled
                             applyAppLanguage(appLanguage)
 
                             // Stop/Restart services
@@ -1460,6 +1464,36 @@ fun SettingsScreen(
                                     )
                                 }
                             }
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
+
+                        // Media button trigger
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.media_button_enabled), style = MaterialTheme.typography.bodyLarge)
+                                Text(stringResource(R.string.media_button_enabled_desc), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            }
+                            Switch(checked = mediaButtonEnabled, onCheckedChange = { mediaButtonEnabled = it })
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
+
+                        // Wake word debug logging
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.wake_word_debug_enabled), style = MaterialTheme.typography.bodyLarge)
+                                Text(stringResource(R.string.wake_word_debug_enabled_desc), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            }
+                            Switch(checked = wakeWordDebugEnabled, onCheckedChange = { wakeWordDebugEnabled = it })
                         }
                     }
                 }
