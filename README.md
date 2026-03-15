@@ -14,6 +14,22 @@
 </a>
 
 <p><em>Tap the image to watch the full demo video</em></p>
+
+### Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/home.jpg" width="180"><br><em>Home</em></td>
+    <td align="center"><img src="docs/images/voice_overlay.jpg" width="180"><br><em>Voice Overlay</em></td>
+    <td align="center"><img src="docs/images/conversations.jpg" width="180"><br><em>Conversations</em></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/canvas.jpg" width="180"><br><em>Canvas (A2UI)</em></td>
+    <td align="center"><img src="docs/images/settings.jpg" width="180"><br><em>Settings</em></td>
+    <td align="center"><img src="docs/images/chat.jpg" width="180"><br><em>Chat</em></td>
+  </tr>
+</table>
+
 </div>
 
 ---
