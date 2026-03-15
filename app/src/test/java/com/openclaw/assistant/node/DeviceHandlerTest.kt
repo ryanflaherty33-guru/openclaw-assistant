@@ -1,5 +1,6 @@
 package com.openclaw.assistant.node
 
+import android.app.Application
 import android.content.Context
 import com.openclaw.assistant.LocationMode
 import com.openclaw.assistant.SecurePrefs
@@ -13,8 +14,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
 class DeviceHandlerTest {
 
   private val context: Context = RuntimeEnvironment.getApplication()

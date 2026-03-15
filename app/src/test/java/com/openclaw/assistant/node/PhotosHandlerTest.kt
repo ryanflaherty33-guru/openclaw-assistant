@@ -1,5 +1,6 @@
 package com.openclaw.assistant.node
 
+import android.app.Application
 import android.content.Context
 import com.openclaw.assistant.gateway.GatewaySession
 import io.mockk.every
@@ -8,15 +9,19 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.Manifest
-import android.os.Build
 import android.provider.MediaStore
 import android.database.MatrixCursor
 import android.content.ContentResolver
 import kotlinx.coroutines.runBlocking
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
 class PhotosHandlerTest {
     private val context = mockk<Context>()
     private val contentResolver = mockk<ContentResolver>()
@@ -25,8 +30,7 @@ class PhotosHandlerTest {
     @Test
     fun `handleLatest returns error when permission missing`() = runBlocking {
         mockkStatic(ContextCompat::class)
-        // Assume API < 33
-        every { ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) } returns PackageManager.PERMISSION_DENIED
+        every { ContextCompat.checkSelfPermission(context, any()) } returns PackageManager.PERMISSION_DENIED
 
         val result = handler.handleLatest()
 

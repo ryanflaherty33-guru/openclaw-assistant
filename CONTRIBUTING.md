@@ -38,9 +38,14 @@ Please follow these steps to have your contribution considered by the maintainer
 
 1.  **Fork the repository** and clone it locally.
 2.  Create a **new branch** for your feature or fix: `git checkout -b feature/amazing-feature` or `git checkout -b fix/annoying-bug`.
-3.  **Commit your changes** with a clear commit message.
-4.  **Push to the branch**: `git push origin feature/amazing-feature`.
-5.  **Submit a pull request** through GitHub.
+3.  Follow the local setup and build instructions in [BUILDING.md](BUILDING.md).
+4.  Run the baseline checks before opening a PR:
+    - `cp app/google-services.json.example app/google-services.json`
+    - `FIREBASE_ENABLED=false ./gradlew lintStandardDebug`
+    - `FIREBASE_ENABLED=false ./gradlew clean testStandardDebugUnitTest`
+5.  **Commit your changes** with a clear commit message.
+6.  **Push to the branch**: `git push origin feature/amazing-feature`.
+7.  **Submit a pull request** through GitHub.
 
 ## Styleguides
 

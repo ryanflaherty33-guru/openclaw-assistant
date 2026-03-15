@@ -111,6 +111,8 @@
 
 Download APK from [Releases](https://github.com/yuga-hashimoto/OpenClawAssistant/releases), or build from source.
 
+For local source builds, see [BUILDING.md](BUILDING.md). It covers the checked-in debug Firebase stub, test commands, and release signing requirements.
+
 #### 2. Gateway Connection (Recommended)
 
 The app connects to your OpenClaw server via the Gateway protocol.
@@ -248,9 +250,13 @@ ngrok http 18789
 
 Pull Requests welcome! Feel free to report issues.
 
+Please follow [BUILDING.md](BUILDING.md) for local setup and run the documented lint/unit test commands before opening a PR.
+
 ### 📄 License
 
 MIT License - See [LICENSE](LICENSE) for details.
+
+Bundled third-party binaries and assets are documented in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
 
 ---
 
@@ -330,6 +336,8 @@ MIT License - See [LICENSE](LICENSE) for details.
 #### 1. アプリのインストール
 
 [Releases](https://github.com/yuga-hashimoto/OpenClawAssistant/releases) からAPKをダウンロード、またはソースからビルド。
+
+ローカルでのソースビルド手順は [BUILDING.md](BUILDING.md) を参照してください。debug 用 Firebase スタブ、テストコマンド、release 署名の前提をまとめています。
 
 #### 2. Gateway接続（推奨）
 
@@ -467,9 +475,13 @@ Chat Completions APIが有効であることを `moltbot.json` で確認：
 
 Pull Requests歓迎！Issues報告もお気軽に。
 
+PR 前のローカルセットアップと lint / unit test 手順は [BUILDING.md](BUILDING.md) を参照してください。
+
 ### 📄 ライセンス
 
 MIT License - 詳細は [LICENSE](LICENSE) を参照。
+
+同梱している第三者バイナリ・アセットは [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) にまとめています。
 
 ---
 
