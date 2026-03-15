@@ -1001,6 +1001,16 @@ fun ChatInputArea(
             else -> MaterialTheme.colorScheme.primary
         }
 
+        val iconDesc = if (!canSend) {
+            when {
+                isListening -> stringResource(R.string.stop_description)
+                isSpeaking -> stringResource(R.string.interrupt_description)
+                else -> stringResource(R.string.start_listening_description)
+            }
+        } else {
+            stringResource(R.string.send_description)
+        }
+
         FloatingActionButton(
             onClick = {
                 if (!canSend) onMicClick() else onSend()
@@ -1018,7 +1028,7 @@ fun ChatInputArea(
                 } else {
                      Icons.AutoMirrored.Filled.Send
                 },
-                contentDescription = stringResource(R.string.send_description),
+                contentDescription = iconDesc,
                 tint = Color.White
             )
         }
