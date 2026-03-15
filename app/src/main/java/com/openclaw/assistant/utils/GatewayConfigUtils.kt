@@ -38,7 +38,7 @@ object GatewayConfigUtils {
         }
         val defaultPort = when (scheme) {
             "wss", "https" -> 443
-            "ws", "http" -> 80
+            "ws", "http" -> 18789
             else -> 443
         }
         val port = uri.port.takeIf { it in 1..65535 } ?: defaultPort
