@@ -105,8 +105,7 @@ class CanvasController {
       null
     } else {
       val lower = trimmed.lowercase()
-      if (lower.startsWith("http://") ||
-          lower.startsWith("https://") ||
+      if (com.openclaw.assistant.shared.utils.NetworkUtils.isUrlSecure(trimmed) ||
           lower.startsWith("file:///android_asset/")) {
         trimmed
       } else {
