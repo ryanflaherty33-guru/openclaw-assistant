@@ -1,0 +1,116 @@
+name: Jules Fix Failed PR CI
+
+on:
+  workflow_run:
+    workflows: ["Build & Check PR"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: jules-ci-fix-${{ github.event.workflow_run.head_branch || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  fix-failed-pr:
+    if: >
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.actor.login != 'google-labs-jules[bot]'
+    runs-on: ubuntu-latest
+    env:
+      JULES_API_KEY: ${{ secrets.JULES_API_KEY || secrets.JULES_API_KEY_1 || secrets.JULES_API_KEY_2 || secrets.JULES_API_KEY_3 }}
+
+    steps:
+      - name: Collect PR and failure context
+        id: context
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prs = run.pull_requests || [];
+            let prTitle = "";
+            let prUrl = "";
+            let prNumber = "";
+
+            if (prs.length > 0 && prs[0].number) {
+              prNumber = String(prs[0].number);
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prs[0].number,
+              });
+              prTitle = pr.title || "";
+              prUrl = pr.html_url || "";
+            }
+
+            const { data } = await github.rest.actions.listJobsForWorkflowRunAttempt({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id,
+              attempt_number: run.run_attempt,
+              per_page: 100,
+            });
+
+            const failedJobs = data.jobs.filter((job) => job.conclusion === "failure");
+            const summary = failedJobs.length > 0
+              ? failedJobs.map((job) => {
+                  const failedStep = (job.steps || []).find((step) => step.conclusion === "failure");
+                  const lines = [
+                    `- Job: ${job.name}`,
+                    `  URL: ${job.html_url}`,
+                  ];
+                  if (failedStep?.name) {
+                    lines.push(`  Failed step: ${failedStep.name}`);
+                  }
+                  return lines.join("\n");
+                }).join("\n\n")
+              : "- GitHub did not return a failing job summary. Inspect the workflow run URL.";
+
+            core.setOutput("pr_number", prNumber);
+            core.setOutput("pr_title", prTitle);
+            core.setOutput("pr_url", prUrl);
+            core.setOutput("failed_jobs", summary);
+
+      - name: Skip when no Jules API key is configured
+        if: ${{ env.JULES_API_KEY == '' }}
+        run: echo "JULES_API_KEY is not configured; skipping Jules invocation."
+
+      - name: Invoke Jules
+        if: ${{ env.JULES_API_KEY != '' }}
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          prompt: |
+            You are fixing a failed pull request CI run for OpenClaw Assistant, an Android app written in Kotlin with Jetpack Compose and multiple product flavors.
+
+            Workflow:
+            - Name: Build & Check PR
+            - Run URL: ${{ github.event.workflow_run.html_url }}
+            - Branch: ${{ github.event.workflow_run.head_branch }}
+            - Head SHA: ${{ github.event.workflow_run.head_sha }}
+            - PR: #${{ steps.context.outputs.pr_number }} ${{ steps.context.outputs.pr_title }}
+            - PR URL: ${{ steps.context.outputs.pr_url }}
+
+            Failure summary:
+            ${{ steps.context.outputs.failed_jobs }}
+
+            Requirements:
+            - Make the smallest safe change that fixes the failing workflow.
+            - Reproduce and validate using the exact Gradle commands from `.github/workflows/ci.yml`.
+            - Mirror the CI bootstrap for environments without Firebase secrets; do not commit a real `google-services.json`.
+            - If the root cause is behavioral, add or update a focused regression test under `app/src/test`.
+            - Do not modify release signing, release secrets, or `.github/workflows/build-release.yml` unless the CI failure directly requires it.
+            - Prefer standard/debug and shared code paths unless the failure is clearly full-flavor specific.
+
+            Validation:
+            - Run `./gradlew lintStandardDebug`
+            - Run `./gradlew assembleStandardDebug assembleFullDebug --parallel`
+            - If you change behavior or tests, also run `./gradlew testStandardDebugUnitTest`
+          jules_api_key: ${{ env.JULES_API_KEY }}
+          starting_branch: ${{ github.event.workflow_run.head_branch }}
+          include_last_commit: true
+          include_commit_log: true
