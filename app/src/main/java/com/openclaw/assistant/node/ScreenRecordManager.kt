@@ -160,7 +160,14 @@ class ScreenRecordManager(private val context: Context) {
       )
     }
 
-  private fun createMediaRecorder(): MediaRecorder = MediaRecorder(context)
+  @Suppress("DEPRECATION")
+  private fun createMediaRecorder(): MediaRecorder {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      MediaRecorder(context)
+    } else {
+      MediaRecorder()
+    }
+  }
 
   private suspend fun ensureMicPermission() {
     val granted =

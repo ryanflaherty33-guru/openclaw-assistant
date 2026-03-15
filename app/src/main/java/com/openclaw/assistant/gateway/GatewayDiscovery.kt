@@ -1,11 +1,13 @@
 package com.openclaw.assistant.gateway
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.DnsResolver
 import android.net.NetworkCapabilities
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
 import android.os.CancellationSignal
 import android.util.Log
 import java.io.IOException
@@ -50,7 +52,11 @@ class GatewayDiscovery(
 ) {
   private val nsd = context.getSystemService(NsdManager::class.java)
   private val connectivity = context.getSystemService(ConnectivityManager::class.java)
-  private val dns = DnsResolver.getInstance()
+  private val dns = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+    DnsResolver.getInstance()
+  } else {
+    null
+  }
   private val serviceType = "_openclaw-gw._tcp."
   private val wideAreaDomain = System.getenv("OPENCLAW_WIDE_AREA_DOMAIN")
   private val logTag = "OpenClaw/GatewayDiscovery"
@@ -441,12 +447,14 @@ class GatewayDiscovery(
     }
   }
 
-  private suspend fun rawQuery(network: android.net.Network?, wireQuery: ByteArray): ByteArray =
-    suspendCancellableCoroutine { cont ->
+  @SuppressLint("NewApi") // dns is non-null only on API 29+ (Build.VERSION_CODES.Q)
+  private suspend fun rawQuery(network: android.net.Network?, wireQuery: ByteArray): ByteArray {
+    val resolver = dns ?: throw UnsupportedOperationException("DnsResolver requires API 29+")
+    return suspendCancellableCoroutine { cont ->
       val signal = CancellationSignal()
       cont.invokeOnCancellation { signal.cancel() }
 
-      dns.rawQuery(
+      resolver.rawQuery(
         network,
         wireQuery,
         DnsResolver.FLAG_EMPTY,
@@ -463,6 +471,7 @@ class GatewayDiscovery(
         },
       )
     }
+  }
 
   private fun txtValue(records: List<TXTRecord>, key: String): String? {
     val prefix = "$key="

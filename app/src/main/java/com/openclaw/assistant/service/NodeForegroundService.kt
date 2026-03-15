@@ -105,31 +105,36 @@ class NodeForegroundService : Service() {
         // to a startForegroundService() that was itself called inside the activity result callback.
         // This satisfies the OS requirement that the FGS be started from the permission grant callback.
         val notification = lastNotification ?: buildNotification("OpenClaw Node", "Starting…")
-        var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-        if (lastRequiresMic) types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-        try {
-          startForeground(NOTIFICATION_ID, notification, types)
-          lastNotification = notification
-        } catch (e: Exception) {
-          android.util.Log.w(TAG, "startForeground(mediaProjection) failed, falling back to dataSync: ${e.message}")
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+          var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
+              ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+          if (lastRequiresMic) types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
           try {
-            val fallbackTypes = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC.let {
-              if (lastRequiresMic) it or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else it
-            }
-            startForeground(NOTIFICATION_ID, notification, fallbackTypes)
+            startForeground(NOTIFICATION_ID, notification, types)
             lastNotification = notification
-          } catch (e2: Exception) {
-            android.util.Log.e(TAG, "startForeground fallback also failed: ${e2.message}")
-            if (lastRequiresMic) {
-              try {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-                lastNotification = notification
-              } catch (e3: Exception) {
-                android.util.Log.e(TAG, "startForeground final fallback failed: ${e3.message}")
+          } catch (e: SecurityException) {
+            android.util.Log.w(TAG, "startForeground(mediaProjection) failed, falling back to dataSync: ${e.message}")
+            try {
+              val fallbackTypes = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC.let {
+                if (lastRequiresMic) it or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else it
+              }
+              startForeground(NOTIFICATION_ID, notification, fallbackTypes)
+              lastNotification = notification
+            } catch (e2: Exception) {
+              android.util.Log.e(TAG, "startForeground fallback also failed: ${e2.message}")
+              if (lastRequiresMic) {
+                try {
+                  startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+                  lastNotification = notification
+                } catch (e3: Exception) {
+                  android.util.Log.e(TAG, "startForeground final fallback failed: ${e3.message}")
+                }
               }
             }
           }
+        } else {
+          startForeground(NOTIFICATION_ID, notification)
+          lastNotification = notification
         }
         mediaProjectionReady.getAndSet(null)?.complete(Unit)
         return START_STICKY
@@ -208,23 +213,27 @@ class NodeForegroundService : Service() {
     }
 
     lastRequiresMic = requiresMic
-    var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-    if (requiresMic) {
-        types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-    }
-
-    try {
-      startForeground(NOTIFICATION_ID, notification, types)
-    } catch (e: Exception) {
-      android.util.Log.w(TAG, "startForeground failed (types=$types): ${e.message}")
-      // Fall back to dataSync-only if microphone type was the cause
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+      var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
       if (requiresMic) {
-        try {
-          startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } catch (e2: Exception) {
-          android.util.Log.e(TAG, "startForeground fallback also failed: ${e2.message}")
+          types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+      }
+
+      try {
+        startForeground(NOTIFICATION_ID, notification, types)
+      } catch (e: SecurityException) {
+        android.util.Log.w(TAG, "startForeground failed (types=$types): ${e.message}")
+        // Fall back to dataSync-only if microphone type was the cause
+        if (requiresMic) {
+          try {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+          } catch (e2: SecurityException) {
+            android.util.Log.e(TAG, "startForeground fallback also failed: ${e2.message}")
+          }
         }
       }
+    } else {
+      startForeground(NOTIFICATION_ID, notification)
     }
     lastNotification = notification
     didStartForeground = true

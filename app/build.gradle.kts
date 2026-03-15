@@ -48,7 +48,7 @@ android {
 
     defaultConfig {
         applicationId = "com.openclaw.assistant"
-        minSdk = 31
+        minSdk = 26
         targetSdk = 34
         versionCode = getTagVersionCode()
         versionName = getTagName()
