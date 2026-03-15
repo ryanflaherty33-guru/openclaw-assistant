@@ -27,6 +27,9 @@ object TTSUtils {
     private val REGEX_BULLET = Regex("^\\s*[-*+]\\s+", RegexOption.MULTILINE)
     private val REGEX_NEWLINE = Regex("\n{3,}")
 
+    private val SENTENCE_ENDERS = listOf("。", "．", ". ", "! ", "? ", "！", "？")
+    private val COMMA_ENDERS = listOf("、", "，", ", ")
+
     /**
      * Setup locale and high-quality voice
      */
@@ -186,9 +189,8 @@ object TTSUtils {
         val paragraphBreak = text.lastIndexOf("\n\n")
         if (paragraphBreak > text.length / 2) return paragraphBreak + 2
 
-        val sentenceEnders = listOf("。", "．", ". ", "! ", "? ", "！", "？")
         var bestPos = -1
-        for (ender in sentenceEnders) {
+        for (ender in SENTENCE_ENDERS) {
             val pos = text.lastIndexOf(ender)
             if (pos > bestPos) bestPos = pos + ender.length
         }
@@ -197,8 +199,7 @@ object TTSUtils {
         val lineBreak = text.lastIndexOf("\n")
         if (lineBreak > text.length / 3) return lineBreak + 1
 
-        val commaEnders = listOf("、", "，", ", ")
-        for (ender in commaEnders) {
+        for (ender in COMMA_ENDERS) {
             val pos = text.lastIndexOf(ender)
             if (pos > bestPos) bestPos = pos + ender.length
         }
