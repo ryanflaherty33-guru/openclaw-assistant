@@ -1,11 +1,27 @@
 # OpenClaw Assistant 🦞
 ![CI](https://github.com/yuga-hashimoto/OpenClawAssistant/actions/workflows/ci.yml/badge.svg)
+[![Latest Release](https://img.shields.io/github/v/release/yuga-hashimoto/OpenClawAssistant?display_name=tag)](https://github.com/yuga-hashimoto/OpenClawAssistant/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/yuga-hashimoto/OpenClawAssistant)](https://github.com/yuga-hashimoto/OpenClawAssistant/blob/main/LICENSE)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/R5R51S97C4)
 
 **[日本語版はこちら](#日本語) | English below**
 
 <div align="center">
+
+<h3>Self-hosted Android voice assistant with offline wake word, system-level controls, and Wear OS support.</h3>
+
+<p>Built for OpenClaw, designed to feel like a real assistant on your phone instead of a thin chat wrapper.</p>
+
+<p>
+  <a href="https://github.com/yuga-hashimoto/OpenClawAssistant/releases/latest">Download APK</a>
+  ·
+  <a href="#quick-start">5-Minute Quick Start</a>
+  ·
+  <a href="https://x.com/monsterggg/status/2019735968216146043">Watch Demo</a>
+  ·
+  <a href="https://github.com/openclaw/openclaw">Get OpenClaw</a>
+</p>
 
 ### Demo
 
@@ -36,7 +52,32 @@
 
 ## English
 
-**Your AI Assistant in Your Pocket** - A dedicated Android voice assistant app for OpenClaw.
+**Your AI Assistant in Your Pocket** - A self-hosted Android voice assistant for OpenClaw with offline wake word detection, real device actions, and a UI built for everyday use.
+
+### Why OpenClaw Assistant
+
+- **Feels native on Android** - Long press Home, use wake word detection, stream replies, and keep talking in continuous conversation mode
+- **Actually controls your device** - Notifications, camera, contacts, calendar, apps, clipboard, WiFi, screen sharing, and more
+- **Self-hosted, not locked to one cloud app** - Connects to your OpenClaw gateway over WebSocket or HTTP
+- **Works beyond the phone** - Includes Wear OS support and a Canvas tab for richer AI-driven UI
+
+<a id="quick-start"></a>
+
+### 🚀 5-Minute Quick Start
+
+1. Install the latest APK from [Releases](https://github.com/yuga-hashimoto/OpenClawAssistant/releases/latest)
+2. On your server, run `openclaw qr`
+3. Open the app and tap **Scan QR Code**
+4. Approve the device on your server if pairing is requested
+5. Long press Home or say your wake word
+
+Need the server first? Start with [OpenClaw](https://github.com/openclaw/openclaw).
+
+### 🔒 Privacy & Security at a Glance
+
+- **Offline wake word detection** runs locally on-device with [Vosk](https://alphacephei.com/vosk/)
+- **Sensitive settings** like server URLs and tokens are stored with AES256-GCM encryption
+- **Powerful capabilities are opt-in** and guarded by Android permissions or explicit user actions
 
 ### ✨ Features
 
@@ -105,7 +146,7 @@
 3. OpenClaw responds with voice
 4. Continue the conversation (session maintained)
 
-### 🚀 Setup
+### 🚀 Detailed Setup
 
 #### 1. Install the App
 
@@ -262,7 +303,30 @@ Bundled third-party binaries and assets are documented in [THIRD_PARTY_LICENSES.
 
 ## 日本語
 
-**あなたのAIアシスタントをポケットに** - OpenClaw専用のAndroid音声アシスタントアプリ
+**あなたのAIアシスタントをポケットに** - オフラインのウェイクワード、スマホ操作、Wear OS 連携まで備えた、OpenClaw向けのセルフホスト型 Android 音声アシスタントです。
+
+### OpenClaw Assistant の強み
+
+- **Android に深く統合** - ホームボタン長押し、ウェイクワード起動、ストリーミング応答、連続会話まで自然につながる
+- **チャット止まりではなく端末を操作できる** - 通知、カメラ、連絡先、カレンダー、アプリ、クリップボード、WiFi、画面共有などに対応
+- **クラウド依存ではなくセルフホスト前提** - OpenClaw Gateway に WebSocket または HTTP で接続
+- **スマホ以外にも広がる** - Wear OS 対応と Canvas タブによるリッチな AI UI を搭載
+
+### 🚀 5分クイックスタート
+
+1. [Releases](https://github.com/yuga-hashimoto/OpenClawAssistant/releases/latest) から最新 APK をインストール
+2. サーバー側で `openclaw qr` を実行
+3. アプリで **QRコードをスキャン** をタップ
+4. ペアリング要求が出たらサーバー側で承認
+5. ホームボタン長押し、またはウェイクワードで起動
+
+まだサーバーがない場合は [OpenClaw](https://github.com/openclaw/openclaw) から始めてください。
+
+### 🔒 プライバシーとセキュリティ
+
+- **ウェイクワード検知はオフライン** で、[Vosk](https://alphacephei.com/vosk/) による端末内処理
+- **URL やトークンなどの機密設定は暗号化保存** される
+- **強い権限が必要な機能は任意** で、Android の権限や明示操作が必要
 
 ### ✨ 機能
 
@@ -331,7 +395,7 @@ Bundled third-party binaries and assets are documented in [THIRD_PARTY_LICENSES.
 3. OpenClawが音声で応答
 4. 会話を続ける（セッション維持）
 
-### 🚀 セットアップ
+### 🚀 詳細セットアップ
 
 #### 1. アプリのインストール
 
