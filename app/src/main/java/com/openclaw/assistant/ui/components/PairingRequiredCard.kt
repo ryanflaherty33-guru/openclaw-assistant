@@ -46,7 +46,7 @@ fun PairingRequiredCard(deviceId: String, displayName: String = "") {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Devices, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Devices, contentDescription = stringResource(R.string.pairing_required_title), tint = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.pairing_required_title),
@@ -90,7 +90,7 @@ fun PairingRequiredCard(deviceId: String, displayName: String = "") {
                     contentPadding = PaddingValues(horizontal = 8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.pairing_copy_command), modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.pairing_approve_command), fontSize = 12.sp)
                 }
@@ -115,7 +115,7 @@ fun PairingRequiredCard(deviceId: String, displayName: String = "") {
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.pairing_refresh_status), modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.pairing_refresh_status))
             }
@@ -126,7 +126,10 @@ fun PairingRequiredCard(deviceId: String, displayName: String = "") {
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text(if (expanded) stringResource(R.string.hide_instructions) else stringResource(R.string.show_instructions))
-                Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null)
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) stringResource(R.string.hide_instructions) else stringResource(R.string.show_instructions)
+                )
             }
 
             if (expanded) {

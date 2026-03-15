@@ -585,6 +585,7 @@
     <string name="permission_notification_listener_desc">Required for AI to read and manage notifications</string>
     <string name="permission_install_unknown_apps">Install Unknown Apps</string>
     <string name="permission_install_unknown_apps_desc">Allow AI to install app updates</string>
+    <string name="permission_toggle_accessibility_label">Toggle %1$s permission</string>
     <string name="permission_summary_title">Permissions Summary</string>
     <string name="permission_summary_format">%1$d standard permissions, %2$d special access granted</string>
 

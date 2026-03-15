@@ -368,7 +368,7 @@ private fun WelcomeStep(onNext: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Launch,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.setup_guide_title),
                 modifier = Modifier.size(80.dp),
                 tint = OnboardingGradientMid
             )
@@ -514,7 +514,7 @@ private fun ConnectionStep(
                 ),
                 border = androidx.compose.foundation.BorderStroke(1.dp, OnboardingGradientMid)
             ) {
-                Icon(Icons.Default.QrCodeScanner, contentDescription = null)
+                Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.qr_scan_prompt))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.qr_scan_prompt), fontSize = 16.sp)
             }
@@ -825,7 +825,10 @@ private fun PermissionItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onClickLabel = stringResource(R.string.permission_toggle_accessibility_label, name)
+            )
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -840,7 +843,7 @@ private fun PermissionItem(
         ) {
             Icon(
                 icon,
-                contentDescription = null,
+                contentDescription = name,
                 tint = if (isGranted) OnboardingGradientMid else OnboardingTextSecondary
             )
         }
@@ -1000,7 +1003,7 @@ private fun FinalCheckStep(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Shield, contentDescription = null, tint = OnboardingGradientMid)
+            Icon(Icons.Default.Shield, contentDescription = stringResource(R.string.permission_summary_title), tint = OnboardingGradientMid)
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
@@ -1160,7 +1163,7 @@ private fun CommandBlock(command: String) {
         Spacer(modifier = Modifier.width(8.dp))
         Icon(
             imageVector = Icons.Default.ContentCopy,
-            contentDescription = null,
+            contentDescription = stringResource(R.string.pairing_copy_command),
             tint = Color(0xFF58A6FF),
             modifier = Modifier.size(16.dp)
         )
