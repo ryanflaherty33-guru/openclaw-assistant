@@ -184,7 +184,7 @@ class HotwordService : Service(), VoskRecognitionListener {
             } else {
                 startForeground(NOTIFICATION_ID, createNotification())
             }
-        } catch (e: SecurityException) {
+        } catch (e: Exception) {
             // This can happen on Android 14+ if the app is not in an eligible state
             // (e.g. started from background without a visible activity). Handled gracefully.
             Log.e(TAG, "Failed to start foreground service", e)

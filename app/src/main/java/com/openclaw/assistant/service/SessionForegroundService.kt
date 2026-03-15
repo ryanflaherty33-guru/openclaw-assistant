@@ -66,11 +66,11 @@ class SessionForegroundService : Service() {
             } else {
                 startForeground(NOTIFICATION_ID, createNotification())
             }
-        } catch (e: SecurityException) {
+        } catch (e: Exception) {
             Log.w(TAG, "startForeground(microphone) failed, falling back: ${e.message}")
             try {
                 startForeground(NOTIFICATION_ID, createNotification())
-            } catch (e2: SecurityException) {
+            } catch (e2: Exception) {
                 Log.e(TAG, "startForeground fallback also failed: ${e2.message}")
                 stopSelf()
                 return START_NOT_STICKY
