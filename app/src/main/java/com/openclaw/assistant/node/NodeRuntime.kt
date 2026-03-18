@@ -305,7 +305,10 @@ class NodeRuntime(context: Context) {
         updateStatus()
         scope.launch { refreshBrandingFromGateway() }
         scope.launch { gatewayEventHandler.refreshWakeWordsFromGateway() }
-        scope.launch { fetchAgentList() }
+        scope.launch {
+          fetchAgentList()
+          updateHomeCanvasState()
+        }
       },
       onDisconnected = { message ->
         operatorConnected = false
@@ -320,6 +323,7 @@ class NodeRuntime(context: Context) {
         chat.applyMainSessionKey(mainKey)
         chat.onDisconnected(message)
         updateStatus()
+        updateHomeCanvasState()
       },
       onEvent = { event, payloadJson ->
         handleGatewayEvent(event, payloadJson)
@@ -913,7 +917,38 @@ class NodeRuntime(context: Context) {
 
   /** Refresh the available agent list from the gateway (fire-and-forget). */
   fun refreshAgentList() {
-    scope.launch { fetchAgentList() }
+    scope.launch {
+      fetchAgentList()
+      updateHomeCanvasState()
+    }
+  }
+
+  /** Push current gateway + agent state into the home canvas so it survives reconnects and restarts. */
+  private fun updateHomeCanvasState() {
+    val connected = _isConnected.value
+    val name = _serverName.value
+    val address = _remoteAddress.value
+    val agentResult = _agentList.value
+    val activeKey = _mainSessionKey.value
+
+    val agentsJson = agentResult?.agents?.joinToString(",") { agent ->
+      """{"id":${org.json.JSONObject.quote(agent.id)},"name":${org.json.JSONObject.quote(agent.name)}}"""
+    } ?: ""
+    val defaultId = agentResult?.defaultId ?: activeKey
+    val activeAgentName = agentResult?.agents?.firstOrNull { it.id == activeKey }?.name ?: activeKey
+    val nameJson = name?.let { org.json.JSONObject.quote(it) } ?: "null"
+    val addressJson = address?.let { org.json.JSONObject.quote(it) } ?: "null"
+    val payload = """{"connected":$connected,"serverName":$nameJson,"remoteAddress":$addressJson,"defaultAgentId":${org.json.JSONObject.quote(defaultId)},"activeAgentId":${org.json.JSONObject.quote(activeKey)},"activeAgentName":${org.json.JSONObject.quote(activeAgentName)},"agents":[$agentsJson]}"""
+    canvas.updateHomeCanvasState(if (connected || agentResult != null) payload else null)
+  }
+
+  /** Refresh the home canvas overview if the gateway is currently connected. */
+  fun refreshHomeCanvasOverviewIfConnected() {
+    if (!_isConnected.value) return
+    scope.launch {
+      fetchAgentList()
+      updateHomeCanvasState()
+    }
   }
 
   private suspend fun refreshBrandingFromGateway() {

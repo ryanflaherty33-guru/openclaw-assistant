@@ -258,8 +258,8 @@ dependencies {
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
-    // QR Code Scanning
-    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    // QR Code Scanning (Google Code Scanner — no camera permission required)
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 }
 
 tasks.withType<Test>().configureEach {

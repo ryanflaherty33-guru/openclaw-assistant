@@ -9,8 +9,9 @@ import android.os.Build
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -437,11 +438,7 @@ private fun ConnectionStep(
     onManualPasswordChange: (String) -> Unit,
     onNext: () -> Unit
 ) {
-    val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-        if (result.contents != null) {
-            onSetupCodeChange(result.contents)
-        }
-    }
+    val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize()) {
         // スクロール可能なコンテンツ部分
@@ -496,16 +493,17 @@ private fun ConnectionStep(
             CommandBlock("openclaw qr")
             Spacer(modifier = Modifier.height(8.dp))
 
-            val qrPrompt = stringResource(R.string.qr_scan_prompt)
             OutlinedButton(
                 onClick = {
-                    val options = ScanOptions().apply {
-                        setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                        setPrompt(qrPrompt)
-                        setBeepEnabled(false)
-                        setOrientationLocked(false)
-                    }
-                    scanLauncher.launch(options)
+                    val options = GmsBarcodeScannerOptions.Builder()
+                        .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                        .build()
+                    GmsBarcodeScanning.getClient(context, options)
+                        .startScan()
+                        .addOnSuccessListener { barcode ->
+                            barcode.rawValue?.let { onSetupCodeChange(it) }
+                        }
+                        .addOnFailureListener { /* scan cancelled or failed — no action needed */ }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),

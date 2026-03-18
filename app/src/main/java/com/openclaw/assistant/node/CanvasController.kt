@@ -37,6 +37,7 @@ class CanvasController {
   @Volatile private var debugStatusEnabled: Boolean = false
   @Volatile private var debugStatusTitle: String? = null
   @Volatile private var debugStatusSubtitle: String? = null
+  @Volatile private var homeCanvasStateJson: String? = null
 
   @Volatile var gatewayToken: String? = null
   @Volatile var gatewayOrigin: String? = null
@@ -91,6 +92,7 @@ class CanvasController {
       reload()
     }
     applyDebugStatus()
+    applyHomeCanvasState()
   }
 
   fun detach() {
@@ -137,6 +139,12 @@ class CanvasController {
   fun onPageFinished() {
     _isPageLoading.value = false
     applyDebugStatus()
+    applyHomeCanvasState()
+  }
+
+  fun updateHomeCanvasState(json: String?) {
+    homeCanvasStateJson = json
+    applyHomeCanvasState()
   }
 
   private inline fun withWebViewOnMain(crossinline block: (WebView) -> Unit) {
@@ -167,6 +175,23 @@ class CanvasController {
         }
         wv.loadUrl(currentUrl, authHeaders())
       }
+    }
+  }
+
+  private fun applyHomeCanvasState() {
+    val json = homeCanvasStateJson
+    withWebViewOnMain { wv ->
+      val quotedJson = json?.let { JSONObject.quote(it) } ?: "null"
+      val js = """
+        (() => {
+          try {
+            const api = globalThis.__openclaw;
+            if (typeof api?.setHomeCanvasState !== 'function') return;
+            api.setHomeCanvasState($quotedJson);
+          } catch (_) {}
+        })();
+      """.trimIndent()
+      wv.evaluateJavascript(js, null)
     }
   }
 

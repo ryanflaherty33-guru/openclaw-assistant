@@ -123,6 +123,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
 
 
+  fun refreshHomeCanvasOverviewIfConnected() {
+    runtime.refreshHomeCanvasOverviewIfConnected()
+  }
+
   fun refreshGatewayConnection() {
     runtime.refreshGatewayConnection()
   }
