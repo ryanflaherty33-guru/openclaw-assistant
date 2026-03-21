@@ -71,6 +71,7 @@ class CanvasController {
         javaScriptEnabled = true
         domStorageEnabled = true
         allowFileAccess = false
+        allowContentAccess = false
         mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
       }
       // Required so JavaScript interactions (dialogs, file choosers, etc.) work properly.
