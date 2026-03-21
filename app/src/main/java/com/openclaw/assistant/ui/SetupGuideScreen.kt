@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -1206,7 +1207,8 @@ private fun CommandBlock(command: String) {
             .fillMaxWidth()
             .background(Color(0xFF0D1117), RoundedCornerShape(8.dp))
             .clickable(
-                onClickLabel = stringResource(R.string.pairing_copy_command)
+                onClickLabel = stringResource(R.string.pairing_copy_command),
+                role = Role.Button
             ) {
                 clipboardManager.setText(AnnotatedString(command))
                 android.widget.Toast.makeText(context, context.getString(R.string.setup_guide_copied), android.widget.Toast.LENGTH_SHORT).show()
