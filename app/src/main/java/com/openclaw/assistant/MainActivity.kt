@@ -1006,8 +1006,16 @@ fun SystemStatusCard(
 ) {
     val isConnecting = statusText.contains("Connecting", ignoreCase = true)
 
-    val backgroundColor = if (connected) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-    val contentColor = if (connected) Color(0xFF1B5E20) else Color(0xFFB71C1C)
+    val backgroundColor = when {
+        connected -> Color(0xFFE8F5E9)
+        isConnecting -> Color(0xFFFFF3E0)
+        else -> Color(0xFFFFEBEE)
+    }
+    val contentColor = when {
+        connected -> Color(0xFF1B5E20)
+        isConnecting -> Color(0xFFE65100)
+        else -> Color(0xFFB71C1C)
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1061,13 +1069,18 @@ fun SystemStatusCard(
                 } else {
                     Button(
                         onClick = onConnect,
+                        enabled = !isConnecting,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = contentColor,
                             contentColor = Color.White
                         )
                     ) {
-                        Text(stringResource(R.string.connect))
+                        if (isConnecting) {
+                            Text(stringResource(R.string.gateway_connecting))
+                        } else {
+                            Text(stringResource(R.string.connect))
+                        }
                     }
                 }
             }
