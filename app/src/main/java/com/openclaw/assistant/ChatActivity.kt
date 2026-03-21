@@ -77,8 +77,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
-import java.io.ByteArrayOutputStream
-import android.util.Base64
 import android.content.ContentResolver
 
 import com.openclaw.assistant.data.SettingsRepository
@@ -311,40 +309,15 @@ fun ChatScreen(
                     val mimeType = resolver.getType(uri) ?: "image/jpeg"
                     val fileName = getFileName(context, uri) ?: "image.jpg"
 
-                    // Decode, resize and compress image to avoid server stack overflow
-                    // on large Base64 payloads (server regex limit ~3.5MB decoded).
-                    val MAX_DIMENSION = 1024
-                    val JPEG_QUALITY = 70
-
-                    val rawBytes = resolver.openInputStream(uri)?.use { input ->
-                        val out = ByteArrayOutputStream()
-                        input.copyTo(out)
-                        out.toByteArray()
-                    } ?: ByteArray(0)
-                    if (rawBytes.isEmpty()) return@mapNotNull null
-
-                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size)
+                    val imageData = com.openclaw.assistant.ui.chat.ChatImageCodec
+                        .loadSizedImageAttachment(resolver, uri)
                         ?: return@mapNotNull null
-                    val scaledBitmap = if (bitmap.width > MAX_DIMENSION || bitmap.height > MAX_DIMENSION) {
-                        val scale = MAX_DIMENSION.toFloat() / maxOf(bitmap.width, bitmap.height)
-                        val newW = (bitmap.width * scale).toInt()
-                        val newH = (bitmap.height * scale).toInt()
-                        android.graphics.Bitmap.createScaledBitmap(bitmap, newW, newH, true).also {
-                            if (it !== bitmap) bitmap.recycle()
-                        }
-                    } else bitmap
-
-                    val compressedOut = ByteArrayOutputStream()
-                    scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, JPEG_QUALITY, compressedOut)
-                    scaledBitmap.recycle()
-                    val compressedBytes = compressedOut.toByteArray()
-
-                    val base64 = Base64.encodeToString(compressedBytes, Base64.NO_WRAP)
                     PendingFileAttachment(
                         id = uri.toString() + "#" + System.currentTimeMillis().toString(),
-                        fileName = fileName,
+                        fileName = com.openclaw.assistant.ui.chat.ChatImageCodec
+                            .normalizeAttachmentFileName(fileName),
                         mimeType = "image/jpeg",
-                        base64 = base64
+                        base64 = imageData.base64
                     )
                 } catch (e: Exception) {
                     Log.w("ChatDbg", "pickFiles: failed to process image", e)

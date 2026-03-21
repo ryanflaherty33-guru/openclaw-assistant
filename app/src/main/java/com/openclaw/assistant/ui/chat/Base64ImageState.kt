@@ -1,7 +1,5 @@
 package com.openclaw.assistant.ui.chat
 
-import android.graphics.BitmapFactory
-import android.util.Base64
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,8 +28,7 @@ fun rememberBase64ImageState(base64: String): Base64ImageState {
         state.image =
             withContext(Dispatchers.Default) {
                 try {
-                    val bytes = Base64.decode(base64, Base64.DEFAULT)
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    val bitmap = ChatImageCodec.decodeBase64Bitmap(base64, maxDimension = 512)
                         ?: return@withContext null
                     bitmap.asImageBitmap()
                 } catch (_: Throwable) {
