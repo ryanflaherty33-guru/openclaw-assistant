@@ -571,6 +571,9 @@ class NodeRuntime(context: Context) {
   private fun resolvePreferredGatewayEndpoint(): GatewayEndpoint? {
     if (manualEnabled.value) {
       val host = manualHost.value.trim()
+        .removePrefix("https://")
+        .removePrefix("http://")
+        .removeSuffix("/")
       val port = manualPort.value
       if (host.isEmpty() || port !in 1..65535) return null
       return GatewayEndpoint.manual(host = host, port = port)
@@ -587,6 +590,9 @@ class NodeRuntime(context: Context) {
   private fun autoConnectIfNeeded() {
     if (didAutoConnect) return
     if (_isConnected.value) return
+    // Manual mode startup connection is handled by the dedicated startup block; skip here
+    // to avoid a double-connect race when discovery fires before the 500 ms delay elapses.
+    if (manualEnabled.value) return
     val endpoint = resolvePreferredGatewayEndpoint() ?: return
     didAutoConnect = true
     connect(endpoint)

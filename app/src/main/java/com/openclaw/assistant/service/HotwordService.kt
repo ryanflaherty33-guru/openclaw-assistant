@@ -543,7 +543,7 @@ class HotwordService : Service(), VoskRecognitionListener {
      * Returns the score (0.0–1.0), or 1.0 if plain text match, or 0.0 if not found.
      */
     private fun parseWakeWordConfidence(text: String, word: String): Float {
-        val pattern = wakeWordRegexCache.getOrPut(word) {
+        val pattern = wakeWordRegexCache.computeIfAbsent(word) {
             Regex("\\[${Regex.escape(word)}\\]\\(([0-9.]+)\\)", RegexOption.IGNORE_CASE)
         }
         val match = pattern.find(text)
