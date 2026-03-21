@@ -534,13 +534,18 @@ class HotwordService : Service(), VoskRecognitionListener {
         }
     }
 
+    // Cache for compiled Regex objects to avoid redundant instantiations on every audio frame
+    private val wakeWordRegexCache = java.util.concurrent.ConcurrentHashMap<String, Regex>()
+
     /**
      * Parses Vosk keyword spotting confidence for [word] from result text.
      * Vosk grammar mode returns results like "[open claw](0.92)" or plain "open claw".
      * Returns the score (0.0–1.0), or 1.0 if plain text match, or 0.0 if not found.
      */
     private fun parseWakeWordConfidence(text: String, word: String): Float {
-        val pattern = Regex("\\[${Regex.escape(word)}\\]\\(([0-9.]+)\\)", RegexOption.IGNORE_CASE)
+        val pattern = wakeWordRegexCache.getOrPut(word) {
+            Regex("\\[${Regex.escape(word)}\\]\\(([0-9.]+)\\)", RegexOption.IGNORE_CASE)
+        }
         val match = pattern.find(text)
         return match?.groupValues?.get(1)?.toFloatOrNull()
             ?: if (text.contains(word, ignoreCase = true)) 1.0f else 0.0f
