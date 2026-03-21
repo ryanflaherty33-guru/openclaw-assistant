@@ -342,7 +342,7 @@ class NodeRuntime(context: Context) {
         _serverVersion.value = version
         _isPairingRequired.value = false
         updateStatus()
-        maybeNavigateToA2uiOnConnect()
+        scope.launch { refreshNodeCanvasCapabilityAndNavigate() }
       },
       onDisconnected = { message ->
         nodeConnected = false
@@ -429,6 +429,11 @@ class NodeRuntime(context: Context) {
   private fun resolveMainSessionKey(): String {
     val trimmed = _mainSessionKey.value.trim()
     return if (trimmed.isEmpty()) "main" else trimmed
+  }
+
+  private suspend fun refreshNodeCanvasCapabilityAndNavigate() {
+    nodeSession.refreshNodeCanvasCapability()
+    maybeNavigateToA2uiOnConnect()
   }
 
   private fun maybeNavigateToA2uiOnConnect() {
@@ -836,21 +841,18 @@ class NodeRuntime(context: Context) {
       val connected = nodeConnected
       var error: String? = null
       if (connected) {
-        try {
-          nodeSession.sendNodeEvent(
-            event = "agent.request",
-            payloadJson =
-              buildJsonObject {
-                put("message", JsonPrimitive(message))
-                put("sessionKey", JsonPrimitive(sessionKey))
-                put("thinking", JsonPrimitive("low"))
-                put("deliver", JsonPrimitive(false))
-                put("key", JsonPrimitive(actionId))
-              }.toString(),
-          )
-        } catch (e: Throwable) {
-          error = e.message ?: "send failed"
-        }
+        val sent = nodeSession.sendNodeEvent(
+          event = "agent.request",
+          payloadJson =
+            buildJsonObject {
+              put("message", JsonPrimitive(message))
+              put("sessionKey", JsonPrimitive(sessionKey))
+              put("thinking", JsonPrimitive("low"))
+              put("deliver", JsonPrimitive(false))
+              put("key", JsonPrimitive(actionId))
+            }.toString(),
+        )
+        if (!sent) error = "send failed"
       } else {
         error = "gateway not connected"
       }
