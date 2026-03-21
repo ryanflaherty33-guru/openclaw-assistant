@@ -37,7 +37,7 @@ class NodeForegroundService : Service() {
 
   private val pauseResumeReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-      val runtime = (application as OpenClawApplication).nodeRuntime
+      val runtime = (application as OpenClawApplication).peekRuntime() ?: return
       when (intent.action) {
         ACTION_PAUSE_HOTWORD -> runtime.pauseVoiceWake()
         ACTION_RESUME_HOTWORD -> runtime.resumeVoiceWake()
@@ -53,10 +53,19 @@ class NodeForegroundService : Service() {
       addAction(ACTION_RESUME_HOTWORD)
     }
     ContextCompat.registerReceiver(this, pauseResumeReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+
+    // Do not force NodeRuntime initialization here — if the runtime hasn't been created yet
+    // (e.g. service started before onboarding completes), stop gracefully instead.
+    val runtime = (application as OpenClawApplication).peekRuntime()
+    if (runtime == null) {
+      android.util.Log.w(TAG, "Runtime not initialized; stopping service gracefully")
+      startForegroundWithTypes(buildNotification("OpenClaw Node", "Starting…"), false)
+      stopSelf()
+      return
+    }
+
     val initial = buildNotification(title = "OpenClaw Node", text = "Starting…")
     startForegroundWithTypes(notification = initial, requiresMic = false)
-
-    val runtime = (application as OpenClawApplication).nodeRuntime
     notificationJob =
       scope.launch {
         combine(
@@ -96,7 +105,7 @@ class NodeForegroundService : Service() {
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     when (intent?.action) {
       ACTION_STOP -> {
-        (application as OpenClawApplication).nodeRuntime.disconnect()
+        (application as OpenClawApplication).peekRuntime()?.disconnect()
         stopSelf()
         return START_NOT_STICKY
       }

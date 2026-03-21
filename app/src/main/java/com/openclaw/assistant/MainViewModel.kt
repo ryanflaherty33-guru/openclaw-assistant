@@ -12,7 +12,7 @@ import com.openclaw.assistant.node.SmsManager
 import kotlinx.coroutines.flow.StateFlow
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
-  private val runtime: NodeRuntime = (app as OpenClawApplication).nodeRuntime
+  private val runtime: NodeRuntime = (app as OpenClawApplication).ensureRuntime()
 
   val canvas: CanvasController = runtime.canvas
   val camera: CameraCaptureManager = runtime.camera
