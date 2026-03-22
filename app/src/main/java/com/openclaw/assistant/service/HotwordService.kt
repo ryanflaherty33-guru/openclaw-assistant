@@ -46,10 +46,14 @@ class HotwordService : Service(), VoskRecognitionListener {
         
         fun start(context: Context) {
             val intent = Intent(context, HotwordService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start HotwordService: ${e.message}", e)
             }
         }
 

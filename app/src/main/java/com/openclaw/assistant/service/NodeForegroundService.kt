@@ -272,7 +272,11 @@ class NodeForegroundService : Service() {
 
     fun start(context: Context) {
       val intent = Intent(context, NodeForegroundService::class.java)
-      context.startForegroundService(intent)
+      try {
+        context.startForegroundService(intent)
+      } catch (e: Exception) {
+        android.util.Log.e(TAG, "Failed to start NodeForegroundService: ${e.message}", e)
+      }
     }
 
     fun stop(context: Context) {
@@ -291,7 +295,11 @@ class NodeForegroundService : Service() {
       mediaProjectionReady.set(deferred)
       val intent = Intent(context, NodeForegroundService::class.java)
         .setAction(ACTION_PREPARE_MEDIA_PROJECTION)
-      context.startForegroundService(intent)
+      try {
+        context.startForegroundService(intent)
+      } catch (e: Exception) {
+        android.util.Log.e(TAG, "Failed to start prepareForMediaProjection: ${e.message}", e)
+      }
     }
   }
 }
