@@ -20,24 +20,13 @@ import javax.net.ssl.X509TrustManager
 /**
  * Simple client - POSTs to the configured HTTP connection
  */
-class OpenClawClient(private val ignoreSslErrors: Boolean = false) {
+class OpenClawClient() {
 
     private val client: OkHttpClient = run {
         val builder = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(120, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-        if (ignoreSslErrors) {
-            val trustAll = object : X509TrustManager {
-                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-                override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-            }
-            val sslContext = SSLContext.getInstance("TLS")
-            sslContext.init(null, arrayOf(trustAll), null)
-            builder.sslSocketFactory(sslContext.socketFactory, trustAll)
-                .hostnameVerifier { _, _ -> true }
-        }
         builder.build()
     }
 

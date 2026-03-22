@@ -239,11 +239,6 @@ class SettingsRepository(context: Context) {
         get() = prefs.getString(KEY_CONNECTION_TYPE, CONNECTION_TYPE_GATEWAY) ?: CONNECTION_TYPE_GATEWAY
         set(value) = prefs.edit().putString(KEY_CONNECTION_TYPE, value).apply()
 
-    // Ignore SSL certificate errors for HTTPS connections (for self-signed certs)
-    var httpIgnoreSslErrors: Boolean
-        get() = prefs.getBoolean(KEY_HTTP_IGNORE_SSL_ERRORS, false)
-        set(value) = prefs.edit().putBoolean(KEY_HTTP_IGNORE_SSL_ERRORS, value).apply()
-
     // Connection type used by the voice session (wakeword / long-press home)
     // Defaults to the same as connectionType so existing setups behave identically
     var wakewordConnectionType: String
@@ -308,7 +303,6 @@ class SettingsRepository(context: Context) {
         private const val KEY_DEFAULT_AGENT_ID = "default_agent_id"
         private const val KEY_USE_NODE_CHAT = "use_node_chat"
         private const val KEY_CONNECTION_TYPE = "connection_type"
-        private const val KEY_HTTP_IGNORE_SSL_ERRORS = "http_ignore_ssl_errors"
         private const val KEY_WAKEWORD_CONNECTION_TYPE = "wakeword_connection_type"
         private const val KEY_SPEECH_SILENCE_TIMEOUT = "speech_silence_timeout"
         private const val KEY_THINKING_SOUND_ENABLED = "thinking_sound_enabled"

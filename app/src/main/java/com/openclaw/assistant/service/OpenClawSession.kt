@@ -74,7 +74,7 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
     }
 
     private val settings = SettingsRepository.getInstance(context)
-    private val apiClient = OpenClawClient(ignoreSslErrors = settings.httpIgnoreSslErrors)
+    private val apiClient = OpenClawClient()
     private lateinit var speechManager: SpeechRecognizerManager
     private lateinit var ttsManager: TTSManager
     
