@@ -60,4 +60,38 @@ class ContactsHandlerTest {
         assertEquals(true, result.payloadJson?.contains("John Doe"))
         unmockkStatic(ContextCompat::class)
     }
+
+    @Test
+    fun `handleSearch escapes SQL LIKE wildcards`() = runBlocking {
+        mockkStatic(ContextCompat::class)
+        every { context.contentResolver } returns contentResolver
+        every { ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) } returns PackageManager.PERMISSION_GRANTED
+
+        val cursor = MatrixCursor(arrayOf(
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+        ))
+        cursor.addRow(arrayOf("100% Cotton", "123456", 1L))
+
+        // We capture the selection args to verify escaping
+        val selectionArgsSlot = io.mockk.slot<Array<String>>()
+        val selectionSlot = io.mockk.slot<String>()
+        every {
+            contentResolver.query(
+                any(),
+                any(),
+                capture(selectionSlot),
+                capture(selectionArgsSlot),
+                any()
+            )
+        } returns cursor
+
+        val result = handler.handleSearch("""{"query":"100%_Cot\\ton"}""")
+
+        assertEquals(true, result.ok)
+        assertEquals(true, selectionSlot.captured.contains("ESCAPE '\\'"))
+        assertEquals("%100\\%\\_Cot\\\\ton%", selectionArgsSlot.captured[0])
+        unmockkStatic(ContextCompat::class)
+    }
 }

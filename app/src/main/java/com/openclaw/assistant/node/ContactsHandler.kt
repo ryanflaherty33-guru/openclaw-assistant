@@ -80,8 +80,8 @@ class ContactsHandler(private val appContext: Context) {
             ContactsContract.CommonDataKinds.Phone.NUMBER,
             ContactsContract.CommonDataKinds.Phone.CONTACT_ID
         )
-        val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
-        val selectionArgs = arrayOf("%$query%")
+        val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ? ESCAPE '\\'"
+        val selectionArgs = arrayOf("%${escapeLikePattern(query)}%")
         val cursor = try {
             appContext.contentResolver.query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
@@ -260,4 +260,7 @@ class ContactsHandler(private val appContext: Context) {
             GatewaySession.InvokeResult.error("CONTACTS_DELETE_FAILED", "CONTACTS_DELETE_FAILED: ${e.message}")
         }
     }
+
+    private fun escapeLikePattern(pattern: String): String =
+        pattern.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 }
