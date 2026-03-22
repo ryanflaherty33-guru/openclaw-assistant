@@ -22,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.openclaw.assistant.R
 import com.openclaw.assistant.chat.ChatMessage
 import com.openclaw.assistant.chat.ChatPendingToolCall
 
@@ -111,7 +113,7 @@ private fun EmptyChatHint(modifier: Modifier = Modifier) {
       tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     Text(
-      text = "Message OpenClaw…",
+      text = stringResource(R.string.ask_hint),
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
