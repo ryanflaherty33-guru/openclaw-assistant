@@ -191,7 +191,10 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
                     partialText = partialText.value,
                     errorMessage = errorMessage.value,
                     audioLevel = audioLevel.value,
-                    onClose = { finish() },
+                    onClose = {
+                        isUserDismissed = true
+                        finish()
+                    },
                     onRetry = { startListening() },
                     onInterrupt = { interruptAndListen() }
                 )
@@ -289,6 +292,13 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
     override fun onHide() {
         super.onHide()
 
+        // ユーザーが明示的に Close ボタンを押した場合は、音声状態に関わらず必ずクリーンアップ
+        if (isUserDismissed) {
+            isUserDismissed = false
+            cleanupSession()
+            return
+        }
+
         // If a voice session is active (listening, thinking, or speaking),
         // keep resources alive so conversation continues with screen off.
         val state = currentState.value
@@ -367,6 +377,7 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
 
     private var listeningJob: Job? = null
     private var speakingJob: Job? = null
+    private var isUserDismissed = false
 
     private fun startListening(initialDelayMs: Long = 50L) {
         Log.d(TAG, "startListening() called, currentState=${currentState.value}, listeningJob=${listeningJob}, speakingJob=${speakingJob}")
