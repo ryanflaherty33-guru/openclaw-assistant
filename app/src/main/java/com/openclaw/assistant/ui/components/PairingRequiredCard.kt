@@ -104,6 +104,8 @@ fun PairingRequiredCard(deviceId: String, displayName: String = "") {
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.pairing_reject_command), fontSize = 12.sp)
                 }
             }
