@@ -6,8 +6,11 @@ import android.net.wifi.WifiManager
 import com.openclaw.assistant.gateway.GatewaySession
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 @SuppressLint("MissingPermission")
 class WifiHandler(
@@ -25,9 +28,9 @@ class WifiHandler(
       val isEnabled = wm.isWifiEnabled
       val info = wm.connectionInfo
 
-      val payload = if (isEnabled && info != null && info.networkId != -1) {
+      val payloadObj = if (isEnabled && info != null && info.networkId != -1) {
         // Connected
-        val ssid = info.ssid?.replace("\"", "") ?: ""
+        val ssid = info.ssid?.removeSurrounding("\"") ?: ""
         val bssid = info.bssid ?: ""
         val rssi = info.rssi
         val linkSpeed = info.linkSpeed
@@ -40,12 +43,23 @@ class WifiHandler(
           ipAddress shr 24 and 0xff
         )
 
-        """{"enabled":true,"connected":true,"ssid":"$ssid","bssid":"$bssid","rssi":$rssi,"linkSpeedMbps":$linkSpeed,"ipAddress":"$ipString"}"""
+        buildJsonObject {
+          put("enabled", true)
+          put("connected", true)
+          put("ssid", ssid)
+          put("bssid", bssid)
+          put("rssi", rssi)
+          put("linkSpeedMbps", linkSpeed)
+          put("ipAddress", ipString)
+        }
       } else {
         // Disconnected or disabled
-        """{"enabled":$isEnabled,"connected":false}"""
+        buildJsonObject {
+          put("enabled", isEnabled)
+          put("connected", false)
+        }
       }
-      GatewaySession.InvokeResult.ok(payload)
+      GatewaySession.InvokeResult.ok(payloadObj.toString())
     } catch (e: Throwable) {
       val (code, msg) = invokeErrorFromThrowable(e)
       GatewaySession.InvokeResult.error(code, msg)
@@ -63,14 +77,19 @@ class WifiHandler(
       // and location services to be enabled. Assuming permissions are mostly granted or handled.
       // Simply retrieving last scan results.
       val results = wm.scanResults
-      val networks = results.map { result ->
-        val ssid = result.SSID.replace("\"", "")
-        val bssid = result.BSSID
-        val rssi = result.level
-        """{"ssid":"$ssid","bssid":"$bssid","rssi":$rssi}"""
-      }.joinToString(",")
+      val payloadObj = buildJsonObject {
+        put("networks", buildJsonArray {
+          results.forEach { result ->
+            add(buildJsonObject {
+              put("ssid", result.SSID.removeSurrounding("\""))
+              put("bssid", result.BSSID)
+              put("rssi", result.level)
+            })
+          }
+        })
+      }
 
-      GatewaySession.InvokeResult.ok("""{"networks":[$networks]}""")
+      GatewaySession.InvokeResult.ok(payloadObj.toString())
     } catch (e: SecurityException) {
       GatewaySession.InvokeResult.error("PERMISSION_DENIED", "Location permission is required to list Wi-Fi networks.")
     } catch (e: Throwable) {
@@ -94,7 +113,10 @@ class WifiHandler(
       if (enabled != null) {
           @Suppress("DEPRECATION")
           wifiManager?.setWifiEnabled(enabled)
-          return GatewaySession.InvokeResult.ok("""{"enabled":$enabled}""")
+          val payloadObj = buildJsonObject {
+            put("enabled", enabled)
+          }
+          return GatewaySession.InvokeResult.ok(payloadObj.toString())
       }
       
       GatewaySession.InvokeResult.error("UNIMPLEMENTED", "Directly connecting to a specific SSID is currently not fully supported via this node capability.")
