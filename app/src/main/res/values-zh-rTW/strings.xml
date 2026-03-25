@@ -51,6 +51,8 @@
 <string name="ask_hint">詢問 OpenClaw...</string>
 <string name="send_description">傳送</string>
 <string name="stop_description">停止</string>
+    <string name="start_listening_description">開始聆聽</string>
+    <string name="interrupt_description">打斷並聆聽</string>
 <string name="listening">正在聽…</string>
 <string name="thinking">思維…</string>
 <string name="speaking">請講…</string>

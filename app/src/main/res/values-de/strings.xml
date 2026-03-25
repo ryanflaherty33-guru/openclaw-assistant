@@ -51,6 +51,8 @@
 <string name="ask_hint">Fragen Sie OpenClaw…</string>
 <string name="send_description">Schicken</string>
 <string name="stop_description">Stoppen</string>
+    <string name="start_listening_description">Zuhören starten</string>
+    <string name="interrupt_description">Unterbrechen und zuhören</string>
 <string name="listening">Hören…</string>
 <string name="thinking">Denken…</string>
 <string name="speaking">Spricht…</string>

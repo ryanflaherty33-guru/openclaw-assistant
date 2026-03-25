@@ -51,6 +51,8 @@
 <string name="ask_hint">ओपनक्लॉ से पूछें...</string>
 <string name="send_description">भेजना</string>
 <string name="stop_description">रुकना</string>
+    <string name="start_listening_description">सुनना शुरू करें</string>
+    <string name="interrupt_description">बाधित करें और सुनें</string>
 <string name="listening">सुनना…</string>
 <string name="thinking">सोच…</string>
 <string name="speaking">बोला जा रहा है…</string>
