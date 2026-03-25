@@ -11,12 +11,7 @@ data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourt
 data class Quint<A, B, C, D, E>(val first: A, val second: B, val third: C, val fourth: D, val fifth: E)
 
 fun String.toJsonString(): String {
-    val escaped =
-        this.replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-    return "\"$escaped\""
+    return JsonPrimitive(this).toString()
 }
 
 fun JsonElement?.asObjectOrNull(): JsonObject? = this as? JsonObject

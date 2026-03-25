@@ -11,6 +11,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.encodeToString
 import com.openclaw.assistant.PermissionRequester
@@ -284,12 +286,18 @@ class SmsManager(private val context: Context) {
                 }
             }
 
-            val messagesJson = messages.joinToString(",") { msg ->
-                val escapedBody = msg.body.replace("\"", "\\\"").replace("\n", "\\n")
-                val escapedAddress = msg.address.replace("\"", "\\\"").replace("\n", "\\n")
-                """{"address":"$escapedAddress","body":"$escapedBody","date":${msg.date},"isRead":${msg.isRead}}"""
-            }
-            val payload = """{"messages":[$messagesJson]}"""
+            val payload = buildJsonObject {
+                put("messages", buildJsonArray {
+                    messages.forEach { msg ->
+                        add(buildJsonObject {
+                            put("address", JsonPrimitive(msg.address))
+                            put("body", JsonPrimitive(msg.body))
+                            put("date", JsonPrimitive(msg.date))
+                            put("isRead", JsonPrimitive(msg.isRead))
+                        })
+                    }
+                })
+            }.toString()
             return ReadResult(ok = true, messages = messages, payloadJson = payload)
         } catch (e: SecurityException) {
             return errorReadResult("SMS_PERMISSION_REQUIRED: ${e.message}")

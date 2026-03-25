@@ -5,8 +5,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import com.openclaw.assistant.gateway.GatewaySession
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.JsonPrimitive
 
 class ClipboardHandler(
   private val context: Context,
@@ -31,8 +33,10 @@ class ClipboardHandler(
         ""
       }
 
-      val escapedText = text.replace("\"", "\\\"").replace("\n", "\\n")
-      GatewaySession.InvokeResult.ok("""{"text":"$escapedText"}""")
+      val payload = buildJsonObject {
+          put("text", JsonPrimitive(text))
+      }.toString()
+      GatewaySession.InvokeResult.ok(payload)
     } catch (e: Throwable) {
       val (code, msg) = invokeErrorFromThrowable(e)
       GatewaySession.InvokeResult.error(code, msg)
