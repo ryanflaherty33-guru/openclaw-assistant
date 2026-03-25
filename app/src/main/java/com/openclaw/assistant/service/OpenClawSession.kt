@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -978,7 +979,7 @@ fun AssistantUI(
                 IconButton(onClick = onClose) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = stringResource(R.string.close),
                         tint = Color.Gray
                     )
                 }
@@ -1038,7 +1039,10 @@ fun AssistantUI(
                     )
                     .then(
                         if (state == AssistantState.SPEAKING || state == AssistantState.PREPARING_SPEECH) {
-                            Modifier.clickable { onInterrupt() }
+                            Modifier.clickable(
+                                onClickLabel = stringResource(R.string.interrupt_description),
+                                role = Role.Button
+                            ) { onInterrupt() }
                         } else {
                             Modifier
                         }
