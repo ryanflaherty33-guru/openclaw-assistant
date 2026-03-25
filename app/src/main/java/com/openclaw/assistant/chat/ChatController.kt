@@ -591,17 +591,16 @@ internal fun messageIdentityKey(message: ChatMessage): String? {
   val timestamp = message.timestampMs?.toString().orEmpty()
   val contentFingerprint =
     message.content.joinToString(separator = "\u001E") { part ->
-      listOf(
-        part.type.trim().lowercase(),
-        part.text?.trim().orEmpty(),
-        part.mimeType?.trim()?.lowercase().orEmpty(),
-        part.fileName?.trim().orEmpty(),
-        part.base64?.hashCode()?.toString().orEmpty(),
-      ).joinToString(separator = "\u001F")
+      val type = part.type.trim().lowercase()
+      val text = part.text?.trim().orEmpty()
+      val mime = part.mimeType?.trim()?.lowercase().orEmpty()
+      val name = part.fileName?.trim().orEmpty()
+      val base64Hash = part.base64?.hashCode()?.toString().orEmpty()
+      "$type\u001F$text\u001F$mime\u001F$name\u001F$base64Hash"
     }
 
   if (timestamp.isEmpty() && contentFingerprint.isEmpty()) return null
-  return listOf(role, timestamp, contentFingerprint).joinToString(separator = "|")
+  return "$role|$timestamp|$contentFingerprint"
 }
 
 private fun JsonElement?.asObjectOrNull(): JsonObject? = this as? JsonObject

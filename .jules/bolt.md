@@ -5,3 +5,6 @@
 ## 2024-05-24 - Hoist Static Collection Allocations in Loop Parsers
 **Learning:** Instantiating static data structures like `listOf(...)` inside frequently called parsing methods (such as text chunking) causes redundant memory allocations and garbage collection pressure, leading to hidden CPU overhead.
 **Action:** Always hoist static parsing collections (like sentence or comma enders) to `private val` properties at the file or object level to ensure they are created exactly once.
+## 2025-05-24 - Readable Kotlin String Interpolation Refactor
+**Learning:** When refactoring multi-line `listOf(...).joinToString(...)` constructions into direct string interpolation to avoid list allocation overhead, squashing the entire multi-chained list element instantiation into a single, excessively long string interpolation string (e.g. `"${part.type.trim().lowercase()}\u001F${part.text?.trim().orEmpty()}..."`) severely degrades code readability.
+**Action:** When replacing multi-line list interpolations, assign the components to individual, properly named local variables first, then construct the final string using those simple variables in the string interpolation template (e.g., `"$type\u001F$text\u001F..."`). This preserves the line-by-line readability of the original list while still eliminating the list allocation performance bottleneck.
