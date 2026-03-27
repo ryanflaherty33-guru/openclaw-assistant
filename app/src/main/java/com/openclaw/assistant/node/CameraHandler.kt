@@ -145,9 +145,11 @@ class CameraHandler(
         clipLog("upload failed: ${err.message}, falling back to base64")
         // Fallback to base64 if upload fails
         val bytes = withContext(Dispatchers.IO) {
-          val b = filePayload.file.readBytes()
-          filePayload.file.delete()
-          b
+          try {
+            filePayload.file.readBytes()
+          } finally {
+            filePayload.file.delete()
+          }
         }
         val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
         showCameraHud("Clip captured", CameraHudKind.Success, 1800)
