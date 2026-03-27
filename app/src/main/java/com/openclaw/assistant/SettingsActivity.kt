@@ -718,7 +718,8 @@ fun SettingsScreen(
                                     },
                                     visualTransformation = if (showNodeToken) VisualTransformation.None else PasswordVisualTransformation(),
                                     modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                                 )
                             } else {
                                 OutlinedTextField(
@@ -792,7 +793,8 @@ fun SettingsScreen(
                                 },
                                 visualTransformation = if (showNodeToken) VisualTransformation.None else PasswordVisualTransformation(),
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                             )
                         }
 
@@ -1909,7 +1911,8 @@ fun ElevenLabsSettingsCard(
                 },
                 visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             
             // API Key link button
@@ -2103,7 +2106,8 @@ fun OpenAISettingsCard(
                 },
                 visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             
             // API Key link button
