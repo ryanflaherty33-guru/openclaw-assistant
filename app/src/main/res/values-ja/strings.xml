@@ -527,6 +527,7 @@
     <string name="attach_file">ファイルを添付</string>
     <string name="file">ファイル</string>
     <string name="image_attachment">画像添付</string>
+    <string name="unsupported_attachment">サポートされていない添付ファイル</string>
 
     <!-- Canvas screen -->
     <string name="canvas_placeholder_title">Canvas</string>

@@ -524,6 +524,7 @@ Pour plus de détails, consultez le site officiel de VOICEVOX.</string>
     <string name="attach_file">Joindre un fichier</string>
     <string name="file">Fichier</string>
     <string name="image_attachment">Pièce jointe image</string>
+    <string name="unsupported_attachment">Pièce jointe non prise en charge</string>
     <string name="canvas_placeholder_title">Canvas</string>
     <string name="canvas_placeholder_body">Canvas est une zone d\'affichage contrôlée par l\'assistant IA. Demandez à l\'assistant dans le Chat d\'afficher quelque chose ici.</string>
     <string name="canvas_go_to_chat">Aller au Chat</string>

@@ -611,6 +611,7 @@
     <string name="attach_file">Attach file</string>
     <string name="file">File</string>
     <string name="image_attachment">Image attachment</string>
+    <string name="unsupported_attachment">Unsupported attachment</string>
     <string name="canvas_placeholder_title">Canvas</string>
     <string name="canvas_placeholder_body">Canvas is a display area controlled by the AI assistant. Ask the assistant in Chat to show something here.</string>
     <string name="canvas_go_to_chat">Go to Chat</string>

@@ -211,12 +211,12 @@ private fun ChatBase64Image(base64: String, mimeType: String?) {
   if (state.image != null) {
     Image(
       bitmap = state.image!!,
-      contentDescription = mimeType ?: "attachment",
+      contentDescription = mimeType ?: stringResource(R.string.image_attachment),
       contentScale = ContentScale.Fit,
       modifier = Modifier.fillMaxWidth(),
     )
   } else if (state.failed) {
-    Text("Unsupported attachment", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(stringResource(R.string.unsupported_attachment), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
   }
 }
 
