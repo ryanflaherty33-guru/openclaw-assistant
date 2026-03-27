@@ -49,6 +49,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -1265,8 +1269,15 @@ fun MissingScopeCard(error: String, onClick: () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
 
+    val onClickLabel = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand)
+
     Card(
-        modifier = Modifier.fillMaxWidth(), 
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {
+                onClick(label = onClickLabel, action = null)
+                role = Role.Button
+            },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer), 
         onClick = { expanded = !expanded }
     ) {

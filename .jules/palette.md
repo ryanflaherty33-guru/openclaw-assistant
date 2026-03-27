@@ -13,3 +13,7 @@
 ## 2025-02-13 - Redundant Screen Reader Announcements on Icons
 **Learning:** Adding a `contentDescription` to an `Icon` when the adjacent `Text` provides the exact same descriptive string causes screen readers (like TalkBack) to announce the action twice (e.g., "Scan QR Code, Scan QR Code").
 **Action:** When an `Icon` is used alongside descriptive text within a clickable area, set the `Icon`'s `contentDescription` to `null` so the screen reader only reads the text once.
+
+## 2025-03-27 - Expand/Collapse Accessibility Pattern for MissingScopeCard
+**Learning:** Using `Card(onClick=)` without an `onClickLabel` leads to generic, unhelpful screen reader announcements. Expandable cards require explicit labels that change based on state (e.g. Expand / Collapse).
+**Action:** When converting `Card(onClick=)` to use `Modifier.clickable()`, use `onClickLabel = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand)` and assign `role = Role.Button` so the action changes dynamically for screen readers.
