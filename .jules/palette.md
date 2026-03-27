@@ -9,3 +9,7 @@
 ## 2024-11-20 - Expand/Collapse Accessibility Pattern
 **Learning:** Adding a `contentDescription` to an expand/collapse `Icon` inside a clickable row that already has adjacent descriptive text causes duplicate/confusing screen reader announcements.
 **Action:** Always set the `onClickLabel` of the `Modifier.clickable` parent `Row` to describe the action (e.g. "Expand" or "Collapse") dynamically based on state, assign a semantic `role = Role.Button`, and set the child `Icon`'s `contentDescription = null` to ensure a single, clear semantic interaction.
+
+## 2025-02-13 - Redundant Screen Reader Announcements on Icons
+**Learning:** Adding a `contentDescription` to an `Icon` when the adjacent `Text` provides the exact same descriptive string causes screen readers (like TalkBack) to announce the action twice (e.g., "Scan QR Code, Scan QR Code").
+**Action:** When an `Icon` is used alongside descriptive text within a clickable area, set the `Icon`'s `contentDescription` to `null` so the screen reader only reads the text once.

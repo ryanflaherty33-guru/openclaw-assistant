@@ -579,7 +579,7 @@ private fun ConnectionStep(
                 ),
                 border = androidx.compose.foundation.BorderStroke(1.dp, OnboardingGradientMid)
             ) {
-                Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.qr_scan_prompt))
+                Icon(Icons.Default.QrCodeScanner, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.qr_scan_prompt), fontSize = 16.sp)
             }
