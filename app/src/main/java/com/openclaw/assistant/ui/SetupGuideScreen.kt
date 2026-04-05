@@ -1080,7 +1080,7 @@ private fun FinalCheckStep(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Shield, contentDescription = stringResource(R.string.permission_summary_title), tint = OnboardingGradientMid)
+            Icon(Icons.Default.Shield, contentDescription = null, tint = OnboardingGradientMid)
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(

@@ -46,7 +46,7 @@ fun PairingRequiredCard(deviceId: String, displayName: String = "") {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Devices, contentDescription = stringResource(R.string.pairing_required_title), tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Devices, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.pairing_required_title),
