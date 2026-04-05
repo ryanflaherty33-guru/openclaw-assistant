@@ -142,11 +142,12 @@ class HotwordService : Service(), VoskRecognitionListener {
                         .edit().putBoolean("vosk_unsupported", true).apply()
                     // Don't resume - device doesn't support Vosk
                 } else if (throwable is RuntimeException && throwable.message == "error reading audio buffer") {
-                    // Transient mic unavailability - handled by recovery logic, no need to report
+                    // Mic unavailability during Vosk read — use exponential backoff to avoid
+                    // tight restart loops when the mic is persistently unavailable.
                     speechService = null
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         if (!isSessionActive) {
-                            resumeHotwordDetection()
+                            scheduleAudioRetry()
                         }
                     }
                 } else {
