@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -70,7 +71,7 @@ fun StatusIndicator(
     )
 
     Row(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {},
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -80,12 +81,12 @@ fun StatusIndicator(
                 .alpha(alpha)
                 .background(dotColor, CircleShape)
                 .then(
-                    if (label == null) {
+                    if (label != null) {
+                        Modifier.clearAndSetSemantics {}
+                    } else {
                         Modifier.semantics {
                             contentDescription = stateDesc
                         }
-                    } else {
-                        Modifier
                     }
                 )
         )
