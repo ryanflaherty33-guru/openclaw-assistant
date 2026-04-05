@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <capability
+        android:name="custom.actions.intent.ASK_OPENCLAW"
+        app:queryPatterns="@array/ask_openclaw_query_patterns">
+        <intent
+            android:action="com.openclaw.assistant.action.ASK_OPENCLAW"
+            android:targetPackage="com.openclaw.assistant"
+            android:targetClass="com.openclaw.assistant.MainActivity">
+            <parameter
+                android:name="prompt"
+                android:key="prompt"
+                android:mimeType="text/*"
+                android:required="true" />
+        </intent>
+    </capability>
+</shortcuts>

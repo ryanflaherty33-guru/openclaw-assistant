@@ -173,9 +173,27 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             super.attachBaseContext(newBase)
         }
     }
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == "com.openclaw.assistant.action.ASK_OPENCLAW") {
+            val prompt = intent.getStringExtra("prompt")
+            if (!prompt.isNullOrBlank()) {
+                val chatIntent = Intent(this, ChatActivity::class.java).apply {
+                    putExtra("EXTRA_PREFILL_TEXT", prompt)
+                }
+                startActivity(chatIntent)
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleIntent(intent)
         settings = SettingsRepository.getInstance(this)
         
         screenCaptureRequester = ScreenCaptureRequester(this)
