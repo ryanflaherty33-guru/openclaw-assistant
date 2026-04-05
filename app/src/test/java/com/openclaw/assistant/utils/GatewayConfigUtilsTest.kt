@@ -111,5 +111,42 @@ class GatewayConfigUtilsTest {
         assertNotNull(result)
         assertEquals(443, result!!.port)
         assertEquals(true, result.tls)
+        assertEquals("https://example.com", result.displayUrl)
+    }
+
+    @Test
+    fun `parseGatewayEndpoint UsesDefaultCleartextPortForBareWsUrls`() {
+        val result = GatewayConfigUtils.parseGatewayEndpoint("ws://192.168.1.100")
+        assertNotNull(result)
+        assertEquals(18789, result!!.port)
+        assertEquals(false, result.tls)
+        assertEquals("http://192.168.1.100:18789", result.displayUrl)
+    }
+
+    @Test
+    fun `parseGatewayEndpoint OmitsExplicitDefaultTlsPortFromDisplayUrl`() {
+        val result = GatewayConfigUtils.parseGatewayEndpoint("https://example.com:443")
+        assertNotNull(result)
+        assertEquals(443, result!!.port)
+        assertEquals(true, result.tls)
+        assertEquals("https://example.com", result.displayUrl)
+    }
+
+    @Test
+    fun `parseGatewayEndpoint KeepsExplicitNonDefaultPortInDisplayUrl`() {
+        val result = GatewayConfigUtils.parseGatewayEndpoint("http://192.168.1.100:8080")
+        assertNotNull(result)
+        assertEquals(8080, result!!.port)
+        assertEquals(false, result.tls)
+        assertEquals("http://192.168.1.100:8080", result.displayUrl)
+    }
+
+    @Test
+    fun `parseGatewayEndpoint KeepsExplicitCleartextPort80InDisplayUrl`() {
+        val result = GatewayConfigUtils.parseGatewayEndpoint("http://192.168.1.100:80")
+        assertNotNull(result)
+        assertEquals(80, result!!.port)
+        assertEquals(false, result.tls)
+        assertEquals("http://192.168.1.100:80", result.displayUrl)
     }
 }

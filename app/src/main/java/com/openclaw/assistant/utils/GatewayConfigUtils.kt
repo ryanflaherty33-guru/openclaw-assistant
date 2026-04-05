@@ -38,8 +38,22 @@ object GatewayConfigUtils {
             "wss", "https" -> true
             else -> true
         }
-        val port = uri.port.takeIf { it in 1..65535 } ?: if (tls) 443 else 18789
-        val displayUrl = "${if (tls) "https" else "http"}://$host:$port"
+        val defaultPort = when (scheme) {
+            "wss", "https" -> 443
+            "ws", "http" -> 18789
+            else -> 443
+        }
+        val displayPort = when (scheme) {
+            "wss", "https" -> 443
+            "ws", "http" -> 80
+            else -> 443
+        }
+        val port = uri.port.takeIf { it in 1..65535 } ?: defaultPort
+        val displayUrl = if (port == displayPort && defaultPort == displayPort) {
+            "${if (tls) "https" else "http"}://$host"
+        } else {
+            "${if (tls) "https" else "http"}://$host:$port"
+        }
 
         if (!tls && !NetworkUtils.isUrlSecure(displayUrl)) {
             return null
