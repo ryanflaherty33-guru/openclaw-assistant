@@ -58,7 +58,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.openclaw.assistant.speech.TTSUtils
-import com.openclaw.assistant.ui.components.MarkdownText
+import com.openclaw.assistant.ui.chat.ChatMarkdown
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
@@ -597,9 +597,9 @@ fun MessageBubble(message: ChatMessage) {
                             lineHeight = 24.sp
                         )
                     } else {
-                        MarkdownText(
-                            markdown = message.text,
-                            color = contentColor
+                        ChatMarkdown(
+                            text = message.text,
+                            textColor = contentColor
                         )
                     }
                     if (message.attachments.isNotEmpty()) {
