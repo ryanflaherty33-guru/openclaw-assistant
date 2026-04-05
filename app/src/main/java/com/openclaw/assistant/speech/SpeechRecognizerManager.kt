@@ -12,6 +12,7 @@ import android.speech.SpeechRecognizer
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import java.lang.ref.WeakReference
 import java.util.Locale
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
@@ -23,12 +24,28 @@ import kotlinx.coroutines.launch
 class SpeechRecognizerManager(private val context: Context) {
 
     private var recognizer: SpeechRecognizer? = null
+    private var foregroundContextRef: WeakReference<Context>? = null
+
+    fun attachForegroundContext(context: Context) {
+        foregroundContextRef = WeakReference(context)
+    }
+
+    fun clearForegroundContext(context: Context? = null) {
+        val current = foregroundContextRef?.get()
+        if (context == null || current === context) {
+            foregroundContextRef = null
+        }
+    }
+
+    private fun recognitionContext(): Context {
+        return foregroundContextRef?.get() ?: context
+    }
 
     /**
      * Check if speech recognition is available
      */
     fun isAvailable(): Boolean {
-        return SpeechRecognizer.isRecognitionAvailable(context)
+        return SpeechRecognizer.isRecognitionAvailable(recognitionContext())
     }
 
     /**
@@ -53,9 +70,9 @@ class SpeechRecognizerManager(private val context: Context) {
                 }
                 recognizer = null
             }
-            if (SpeechRecognizer.isRecognitionAvailable(context)) {
-                val appContext = context.applicationContext
-                recognizer = SpeechRecognizer.createSpeechRecognizer(appContext)
+            val recognitionContext = recognitionContext()
+            if (SpeechRecognizer.isRecognitionAvailable(recognitionContext)) {
+                recognizer = SpeechRecognizer.createSpeechRecognizer(recognitionContext)
                 android.util.Log.d("SpeechRecognizerManager", "Created new recognizer instance")
             }
         }

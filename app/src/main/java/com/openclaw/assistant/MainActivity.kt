@@ -7,6 +7,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.SensorPrivacyManager
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -299,7 +301,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private fun refreshAllPermissionsStatus() {
         val list = mutableListOf<PermissionStatusInfo>()
-        list.add(PermissionStatusInfo(getString(R.string.permission_record_audio), ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED))
+        val recordAudioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        list.add(PermissionStatusInfo(getString(R.string.permission_record_audio), recordAudioGranted && !isMicPrivacyBlocked()))
         list.add(PermissionStatusInfo(getString(R.string.permission_camera), ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED))
         list.add(PermissionStatusInfo(getString(R.string.permission_location_fine), ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED))
         list.add(PermissionStatusInfo(getString(R.string.permission_location_coarse), ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED))
@@ -307,6 +310,15 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             list.add(PermissionStatusInfo(getString(R.string.permission_notifications), ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED))
         }
         allPermissionsStatus = list
+    }
+
+    private fun isMicPrivacyBlocked(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        val spm = getSystemService(SensorPrivacyManager::class.java)
+        val supportsMicToggle = spm?.supportsSensorToggle(SensorPrivacyManager.Sensors.MICROPHONE) == true
+        if (!supportsMicToggle) return false
+        val audioManager = getSystemService(AudioManager::class.java)
+        return audioManager?.isMicrophoneMute == true
     }
 
     private fun openAssistantSettings() {

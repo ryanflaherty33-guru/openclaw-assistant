@@ -551,4 +551,6 @@ Pour plus de détails, consultez le site officiel de VOICEVOX.</string>
     <string name="action_expand">Développer</string>
     <string name="action_refresh">Actualiser</string>
     <string name="action_copy">Copier</string>
+    <string name="error_mic_privacy_title">Accès au microphone bloqué</string>
+    <string name="error_mic_privacy_message">Le commutateur de confidentialité du microphone de votre appareil est désactivé. Activez-le dans Paramètres &gt; Confidentialité &gt; Microphone.</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.openclaw.assistant.ui.chat
 
 import android.app.Application
+import android.content.Context
 import android.speech.SpeechRecognizer
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -614,6 +615,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private var lastInputWasVoice = false
     private var listeningJob: kotlinx.coroutines.Job? = null
+
+    fun attachSpeechContext(context: Context) {
+        speechManager.attachForegroundContext(context)
+    }
+
+    fun detachSpeechContext(context: Context? = null) {
+        speechManager.clearForegroundContext(context)
+    }
 
     fun startListening() {
         startListeningInternal(initialDelayMs = 500L, forceRestart = false)

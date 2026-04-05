@@ -3,7 +3,10 @@ package com.openclaw.assistant
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.SensorPrivacyManager
+import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 
@@ -125,6 +128,7 @@ class ChatActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         settings = SettingsRepository.getInstance(this)
         screenCaptureRequester = ScreenCaptureRequester(this)
+        viewModel.attachSpeechContext(this)
 
         // Select specific session if provided via Intent (must be before setContent)
         val extraTitle = intent.getStringExtra(EXTRA_SESSION_TITLE)
@@ -159,17 +163,19 @@ class ChatActivity : ComponentActivity() {
                     onSendMessage = { viewModel.sendMessage(it) },
                     onStartListening = {
                         Log.e(TAG, "onStartListening called, permission=${checkPermission()}")
-                        if (checkPermission()) {
-                            viewModel.startListening()
-                        } else {
-                            requestMicPermissionForListening()
+                        when {
+                            !checkPermission() -> requestMicPermissionForListening()
+                            isMicPrivacyBlocked() -> showMicPrivacyDialog()
+                            else -> viewModel.startListening()
                         }
                     },
                     onStopListening = { viewModel.stopListening() },
                     onStopSpeaking = { viewModel.stopSpeaking() },
                     onInterruptAndListen = {
-                        if (checkPermission()) {
-                            viewModel.interruptAndListen()
+                        when {
+                            !checkPermission() -> requestMicPermissionForListening()
+                            isMicPrivacyBlocked() -> showMicPrivacyDialog()
+                            else -> viewModel.interruptAndListen()
                         }
                     },
                     onBack = { finish() },
@@ -191,6 +197,7 @@ class ChatActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        viewModel.attachSpeechContext(this)
         (application as OpenClawApplication).nodeRuntime.screenRecorder.attachScreenCaptureRequester(screenCaptureRequester)
         // Pause hotword detection while this activity holds the mic.
         // setPackage is required to reach NodeForegroundService (RECEIVER_NOT_EXPORTED).
@@ -218,12 +225,33 @@ class ChatActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        viewModel.detachSpeechContext(this)
         super.onDestroy()
         // TTSManager is managed by ViewModel
     }
 
     private fun checkPermission(): Boolean {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun isMicPrivacyBlocked(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        val spm = getSystemService(SensorPrivacyManager::class.java)
+        val supportsMicToggle = spm?.supportsSensorToggle(SensorPrivacyManager.Sensors.MICROPHONE) == true
+        if (!supportsMicToggle) return false
+        val audioManager = getSystemService(AudioManager::class.java)
+        return audioManager?.isMicrophoneMute == true
+    }
+
+    private fun showMicPrivacyDialog() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.error_mic_privacy_title))
+            .setMessage(getString(R.string.error_mic_privacy_message))
+            .setPositiveButton(getString(R.string.action_open_settings)) { _, _ ->
+                startActivity(Intent(Settings.ACTION_PRIVACY_SETTINGS))
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
     }
 
     private fun requestMicPermissionForListening() {

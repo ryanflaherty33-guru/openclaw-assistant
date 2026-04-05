@@ -553,4 +553,6 @@
     <string name="action_expand">展開する</string>
     <string name="action_refresh">更新</string>
     <string name="action_copy">コピー</string>
+    <string name="error_mic_privacy_title">マイクのアクセスがブロックされています</string>
+    <string name="error_mic_privacy_message">システムのマイクプライバシートグルがオフになっています。設定 &gt; プライバシー &gt; マイクから有効にしてください。</string>
 </resources>

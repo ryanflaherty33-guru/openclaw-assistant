@@ -550,4 +550,6 @@
     <string name="action_expand">展開</string>
     <string name="action_refresh">重新整理</string>
     <string name="action_copy">複製</string>
+    <string name="error_mic_privacy_title">麥克風存取被封鎖</string>
+    <string name="error_mic_privacy_message">您的裝置麥克風隱私開關已關閉。請至設定 &gt; 隱私 &gt; 麥克風開啟。</string>
 </resources>
