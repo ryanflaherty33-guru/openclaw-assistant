@@ -1295,9 +1295,10 @@ fun MissingScopeCard(error: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .semantics(mergeDescendants = true) {
-                onClick(label = onClickLabel, action = null)
+                this.onClick(label = onClickLabel, action = null)
                 role = Role.Button
             },
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer), 
         onClick = { expanded = !expanded }
     ) {
