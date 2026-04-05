@@ -623,7 +623,7 @@ fun MessageBubble(message: ChatMessage) {
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy",
+                                contentDescription = stringResource(R.string.action_copy),
                                 tint = contentColor.copy(alpha = 0.4f),
                                 modifier = Modifier
                                     .size(14.dp)

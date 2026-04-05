@@ -635,4 +635,5 @@
     <string name="action_collapse">Collapse</string>
     <string name="action_expand">Expand</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_copy">Copy</string>
 </resources>
