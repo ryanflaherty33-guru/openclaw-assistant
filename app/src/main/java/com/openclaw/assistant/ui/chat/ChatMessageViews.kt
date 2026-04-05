@@ -39,6 +39,8 @@ import com.openclaw.assistant.chat.ChatPendingToolCall
 import com.openclaw.assistant.tools.ToolDisplayRegistry
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import com.openclaw.assistant.R
 
 @Composable
@@ -100,7 +102,15 @@ private fun ChatMessageBody(content: List<ChatMessageContent>, textColor: Color)
 
 @Composable
 fun ChatTypingIndicatorBubble() {
-  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+  val thinkingDesc = stringResource(R.string.thinking)
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .semantics(mergeDescendants = true) {
+        contentDescription = thinkingDesc
+      },
+    horizontalArrangement = Arrangement.Start
+  ) {
     Surface(
       shape = RoundedCornerShape(16.dp),
       color = MaterialTheme.colorScheme.surfaceContainer,
@@ -124,7 +134,12 @@ fun ChatPendingToolsBubble(toolCalls: List<ChatPendingToolCall>) {
     remember(toolCalls, context) {
       toolCalls.map { ToolDisplayRegistry.resolve(context, it.name, it.args) }
     }
-  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+  val toolsDesc = stringResource(R.string.running_tools)
+  Row(
+    modifier = Modifier
+      .fillMaxWidth(),
+    horizontalArrangement = Arrangement.Start
+  ) {
     Surface(
       shape = RoundedCornerShape(16.dp),
       color = MaterialTheme.colorScheme.surfaceContainer,
@@ -133,6 +148,9 @@ fun ChatPendingToolsBubble(toolCalls: List<ChatPendingToolCall>) {
         Row(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(8.dp),
+          modifier = Modifier.semantics(mergeDescendants = true) {
+             contentDescription = toolsDesc
+          }
         ) {
           DotPulse()
           Text(stringResource(R.string.running_tools), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
