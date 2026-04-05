@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-kapt")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.gms.google-services")
@@ -128,9 +129,6 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -174,7 +172,7 @@ dependencies {
     implementation("androidx.webkit:webkit:1.10.0")
 
     // Compose
-    implementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    implementation(platform("androidx.compose:compose-bom:2025.04.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -189,7 +187,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
 
     // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
 
     // Encrypted SharedPreferences
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
@@ -213,7 +211,7 @@ dependencies {
     implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.14.0")
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     // CameraX
     val cameraXVersion = "1.5.2"
@@ -236,13 +234,13 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.8")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("io.kotest:kotest-runner-junit5-jvm:5.8.0")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.8.0")
     testImplementation("org.robolectric:robolectric:4.16")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.04.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -254,7 +252,7 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
 
