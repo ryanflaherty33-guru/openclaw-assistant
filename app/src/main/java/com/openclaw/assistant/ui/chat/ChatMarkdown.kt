@@ -25,11 +25,13 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.openclaw.assistant.R
 import com.openclaw.assistant.chat.ChatMarkdownPreprocessor
 
 private val BASE64_IMAGE_REGEX = Regex("data:image/([a-zA-Z0-9+.-]+);base64,([A-Za-z0-9+/=\\n\\r]+)")
@@ -202,7 +204,7 @@ private fun InlineBase64Image(base64: String, mimeType: String?) {
   if (image != null) {
     Image(
       bitmap = image!!,
-      contentDescription = mimeType ?: "image",
+      contentDescription = mimeType ?: stringResource(R.string.image_attachment),
       contentScale = ContentScale.Fit,
       modifier = Modifier.fillMaxWidth(),
     )
