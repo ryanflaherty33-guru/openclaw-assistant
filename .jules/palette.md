@@ -17,3 +17,7 @@
 ## 2025-03-27 - Expand/Collapse Accessibility Pattern for MissingScopeCard
 **Learning:** Using `Card(onClick=)` without an `onClickLabel` leads to generic, unhelpful screen reader announcements. Expandable cards require explicit labels that change based on state (e.g. Expand / Collapse).
 **Action:** When converting `Card(onClick=)` to use `Modifier.clickable()`, use `onClickLabel = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand)` and assign `role = Role.Button` so the action changes dynamically for screen readers.
+
+## 2025-05-18 - RadioButton Grouping Accessibility
+**Learning:** Placing a `RadioButton` inside a clickable layout element (like a `Row`) using `Modifier.clickable` creates conflicting semantics, confusing screen readers by presenting multiple disjointed click targets.
+**Action:** Replace `Modifier.clickable` on the parent layout with `Modifier.selectable(role = Role.RadioButton)` and explicitly set the inner `RadioButton`'s `onClick` parameter to `null` to ensure the group is treated as a single, cohesive radio button element.

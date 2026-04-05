@@ -14,6 +14,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -661,37 +663,37 @@ fun SettingsScreen(
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.clickable {
-                                        gatewayBootstrapToken = ""
-                                        usePasswordAuth = false
-                                        testResult = null
-                                    }
-                                ) {
-                                    RadioButton(
+                                    modifier = Modifier.selectable(
                                         selected = !usePasswordAuth,
                                         onClick = {
                                             gatewayBootstrapToken = ""
                                             usePasswordAuth = false
                                             testResult = null
-                                        }
+                                        },
+                                        role = Role.RadioButton
+                                    )
+                                ) {
+                                    RadioButton(
+                                        selected = !usePasswordAuth,
+                                        onClick = null
                                     )
                                     Text(stringResource(R.string.gateway_token))
                                 }
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.clickable {
-                                        gatewayBootstrapToken = ""
-                                        usePasswordAuth = true
-                                        testResult = null
-                                    }
-                                ) {
-                                    RadioButton(
+                                    modifier = Modifier.selectable(
                                         selected = usePasswordAuth,
                                         onClick = {
                                             gatewayBootstrapToken = ""
                                             usePasswordAuth = true
                                             testResult = null
-                                        }
+                                        },
+                                        role = Role.RadioButton
+                                    )
+                                ) {
+                                    RadioButton(
+                                        selected = usePasswordAuth,
+                                        onClick = null
                                     )
                                     Text(stringResource(R.string.gateway_password))
                                 }
