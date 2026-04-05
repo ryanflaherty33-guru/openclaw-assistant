@@ -281,7 +281,15 @@ class NodeForegroundService : Service() {
 
     fun stop(context: Context) {
       val intent = Intent(context, NodeForegroundService::class.java).setAction(ACTION_STOP)
-      context.startService(intent)
+      try {
+        context.startService(intent)
+      } catch (e: IllegalStateException) {
+        android.util.Log.w(TAG, "Failed to send ACTION_STOP via startService, falling back to stopService", e)
+        context.stopService(intent)
+      } catch (e: SecurityException) {
+        android.util.Log.w(TAG, "Failed to send ACTION_STOP via startService, falling back to stopService", e)
+        context.stopService(intent)
+      }
     }
 
     /**

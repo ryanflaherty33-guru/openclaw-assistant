@@ -44,7 +44,21 @@ class MediaButtonReceiver : BroadcastReceiver() {
                 val serviceIntent = Intent(context, OpenClawAssistantService::class.java).apply {
                     action = OpenClawAssistantService.ACTION_SHOW_ASSISTANT
                 }
-                context.startService(serviceIntent)
+                try {
+                    context.startService(serviceIntent)
+                } catch (e: IllegalStateException) {
+                    Log.w(TAG, "Background start failed, falling back to broadcast", e)
+                    val broadcastIntent = Intent(OpenClawAssistantService.ACTION_SHOW_ASSISTANT).apply {
+                        setPackage(context.packageName)
+                    }
+                    context.sendBroadcast(broadcastIntent)
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "Background start failed, falling back to broadcast", e)
+                    val broadcastIntent = Intent(OpenClawAssistantService.ACTION_SHOW_ASSISTANT).apply {
+                        setPackage(context.packageName)
+                    }
+                    context.sendBroadcast(broadcastIntent)
+                }
                 // Absorb the event so it doesn't reach the media player
                 abortBroadcast()
             }

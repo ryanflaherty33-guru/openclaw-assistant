@@ -648,8 +648,22 @@ class HotwordService : Service(), VoskRecognitionListener {
             val intent = Intent(this@HotwordService, OpenClawAssistantService::class.java).apply {
                 action = OpenClawAssistantService.ACTION_SHOW_ASSISTANT
             }
-            startService(intent)
-            Log.e(TAG, "startService ACTION_SHOW_ASSISTANT called")
+            try {
+                startService(intent)
+                Log.e(TAG, "startService ACTION_SHOW_ASSISTANT called")
+            } catch (e: IllegalStateException) {
+                Log.w(TAG, "Background start failed, falling back to broadcast", e)
+                val broadcastIntent = Intent(OpenClawAssistantService.ACTION_SHOW_ASSISTANT).apply {
+                    setPackage(packageName)
+                }
+                sendBroadcast(broadcastIntent)
+            } catch (e: SecurityException) {
+                Log.w(TAG, "Background start failed, falling back to broadcast", e)
+                val broadcastIntent = Intent(OpenClawAssistantService.ACTION_SHOW_ASSISTANT).apply {
+                    setPackage(packageName)
+                }
+                sendBroadcast(broadcastIntent)
+            }
         }
     }
 
