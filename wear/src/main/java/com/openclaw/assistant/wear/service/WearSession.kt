@@ -177,12 +177,14 @@ class WearSession(context: Context) : VoiceInteractionSession(context),
     override fun onShow(args: Bundle?, showFlags: Int) {
         super.onShow(args, showFlags)
         lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+        WearSessionForegroundService.start(context)
         startListening()
     }
 
     override fun onHide() {
         super.onHide()
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
+        WearSessionForegroundService.stop(context)
     }
 
     override fun onDestroy() {
@@ -190,6 +192,7 @@ class WearSession(context: Context) : VoiceInteractionSession(context),
         scope.cancel()
         speechRecognizer?.destroy()
         tts?.shutdown()
+        WearSessionForegroundService.stop(context)
         super.onDestroy()
     }
 

@@ -3,7 +3,9 @@ package com.openclaw.assistant.wear.service
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.openclaw.assistant.wear.R
@@ -61,5 +63,22 @@ class WearSessionForegroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "wear_session"
         private const val NOTIFICATION_ID = 1001
+
+        fun start(context: Context) {
+            val intent = Intent(context, WearSessionForegroundService::class.java)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("WearSessionFGS", "Failed to start WearSessionForegroundService: ${e.message}", e)
+            }
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, WearSessionForegroundService::class.java))
+        }
     }
 }
