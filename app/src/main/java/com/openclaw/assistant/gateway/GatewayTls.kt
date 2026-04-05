@@ -157,13 +157,19 @@ private fun defaultTrustManager(): X509TrustManager {
   return trust ?: throw IllegalStateException("No default X509TrustManager found")
 }
 
+private val HEX_CHARS = "0123456789abcdef".toCharArray()
+
+// ⚡ Bolt Optimization: Replaced `String.format` in loop with manual CharArray bitwise shift
+// to eliminate garbage collection pressure and per-byte formatter allocations.
 private fun sha256Hex(data: ByteArray): String {
   val digest = MessageDigest.getInstance("SHA-256").digest(data)
-  val out = StringBuilder(digest.size * 2)
-  for (byte in digest) {
-    out.append(String.format(Locale.US, "%02x", byte))
+  val hexChars = CharArray(digest.size * 2)
+  for (i in digest.indices) {
+    val v = digest[i].toInt() and 0xFF
+    hexChars[i * 2] = HEX_CHARS[v ushr 4]
+    hexChars[i * 2 + 1] = HEX_CHARS[v and 0x0F]
   }
-  return out.toString()
+  return String(hexChars)
 }
 
 private val SHA256_PREFIX_REGEX = Regex("^sha-?256\\s*:?\\s*", RegexOption.IGNORE_CASE)

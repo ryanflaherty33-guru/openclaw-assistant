@@ -21,6 +21,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 private val SHA256_HEX = Regex("^[a-fA-F0-9]{64}$")
+private val HEX_CHARS = "0123456789abcdef".toCharArray()
 
 internal data class AppUpdateRequest(
   val url: String,
@@ -70,6 +71,8 @@ internal fun parseAppUpdateRequest(paramsJson: String?, connectedHost: String?):
   )
 }
 
+// ⚡ Bolt Optimization: Replaced `String.format` in loop with manual CharArray bitwise shift
+// to eliminate garbage collection pressure and per-byte formatter allocations.
 internal fun sha256Hex(file: File): String {
   val digest = MessageDigest.getInstance("SHA-256")
   file.inputStream().use { input ->
@@ -81,11 +84,14 @@ internal fun sha256Hex(file: File): String {
       digest.update(buffer, 0, read)
     }
   }
-  val out = StringBuilder(64)
-  for (byte in digest.digest()) {
-    out.append(String.format(Locale.US, "%02x", byte))
+  val hexChars = CharArray(64)
+  val digestBytes = digest.digest()
+  for (i in digestBytes.indices) {
+    val v = digestBytes[i].toInt() and 0xFF
+    hexChars[i * 2] = HEX_CHARS[v ushr 4]
+    hexChars[i * 2 + 1] = HEX_CHARS[v and 0x0F]
   }
-  return out.toString()
+  return String(hexChars)
 }
 
 class AppUpdateHandler(
