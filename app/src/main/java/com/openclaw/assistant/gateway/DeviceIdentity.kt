@@ -3,6 +3,7 @@ package com.openclaw.assistant.gateway
 import android.content.Context
 import android.util.Base64
 import android.util.Log
+import com.openclaw.assistant.BuildConfig
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.crypto.tink.CleartextKeysetHandle
 import com.google.crypto.tink.JsonKeysetWriter
@@ -47,7 +48,9 @@ class DeviceIdentity(context: Context) {
             extractPublicKey(handle)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize: ${e.message}")
-            FirebaseCrashlytics.getInstance().recordException(e)
+            if (BuildConfig.FIREBASE_ENABLED) {
+                FirebaseCrashlytics.getInstance().recordException(e)
+            }
         }
     }
 
@@ -109,7 +112,9 @@ class DeviceIdentity(context: Context) {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to extract public key: ${e.message}")
-            FirebaseCrashlytics.getInstance().recordException(e)
+            if (BuildConfig.FIREBASE_ENABLED) {
+                FirebaseCrashlytics.getInstance().recordException(e)
+            }
         }
     }
 
@@ -117,12 +122,14 @@ class DeviceIdentity(context: Context) {
         return try {
             val signature = signer?.sign(data.toByteArray(Charsets.UTF_8))
             Base64.encodeToString(
-                signature, 
+                signature,
                 Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
             )
         } catch (e: Exception) {
             Log.e(TAG, "Sign failed: ${e.message}")
-            FirebaseCrashlytics.getInstance().recordException(e)
+            if (BuildConfig.FIREBASE_ENABLED) {
+                FirebaseCrashlytics.getInstance().recordException(e)
+            }
             null
         }
     }

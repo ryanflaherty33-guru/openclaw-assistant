@@ -1,6 +1,7 @@
 package com.openclaw.assistant.utils
 
 import android.util.Log
+import com.openclaw.assistant.BuildConfig
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
@@ -69,7 +70,9 @@ object UpdateChecker {
             return@withContext null
         } catch (e: Exception) {
             Log.e(TAG, "Error checking for updates", e)
-            FirebaseCrashlytics.getInstance().recordException(e)
+            if (BuildConfig.FIREBASE_ENABLED) {
+                FirebaseCrashlytics.getInstance().recordException(e)
+            }
             return@withContext null
         }
     }

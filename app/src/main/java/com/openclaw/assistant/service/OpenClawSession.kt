@@ -8,6 +8,7 @@ import android.service.voice.VoiceInteractionSession
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.LayoutInflater
+import com.openclaw.assistant.BuildConfig
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import android.view.View
 import android.view.ViewGroup
@@ -262,7 +263,9 @@ class OpenClawSession(context: Context) : VoiceInteractionSession(context),
                     currentSessionId?.let { settings.sessionId = it }
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to handle session", e)
-                    FirebaseCrashlytics.getInstance().recordException(e)
+                    if (BuildConfig.FIREBASE_ENABLED) {
+                        FirebaseCrashlytics.getInstance().recordException(e)
+                    }
                 }
             }
         }
