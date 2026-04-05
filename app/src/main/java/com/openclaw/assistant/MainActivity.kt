@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
         val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
         val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val smsGranted = permissions[Manifest.permission.SEND_SMS] ?: false
+        val smsGranted = (permissions[Manifest.permission.SEND_SMS] ?: false) || (permissions[Manifest.permission.READ_SMS] ?: false)
 
         // Auto-enable capabilities when permission is newly granted
         val runtime = (applicationContext as OpenClawApplication).nodeRuntime
@@ -818,11 +818,13 @@ fun MainScreen(
                             } else {
                                 val granted = ContextCompat.checkSelfPermission(
                                     context, Manifest.permission.SEND_SMS
+                                ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                                    context, Manifest.permission.READ_SMS
                                 ) == PackageManager.PERMISSION_GRANTED
                                 if (granted) {
                                     runtime.setSmsEnabled(true)
                                 } else {
-                                    onRequestPermissions(listOf(Manifest.permission.SEND_SMS))
+                                    onRequestPermissions(listOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS))
                                 }
                             }
                         },

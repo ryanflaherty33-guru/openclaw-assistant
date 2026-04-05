@@ -151,7 +151,7 @@ private enum class PermissionToggle(
         R.string.capability_sms,
         R.string.permission_send_sms_desc,
         Icons.Default.Sms,
-        listOf(Manifest.permission.SEND_SMS)
+        listOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS)
     )
 }
 
