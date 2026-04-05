@@ -638,7 +638,7 @@ fun SettingsScreen(
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedTextField(
                                     value = gatewayHost,
-                                    onValueChange = { gatewayHost = it; testResult = null },
+                                    onValueChange = { gatewayHost = it; testResult = null; gatewayBootstrapToken = "" },
                                     label = { Text(stringResource(R.string.gateway_host)) },
                                     modifier = Modifier.weight(2f),
                                     singleLine = true,
@@ -646,7 +646,7 @@ fun SettingsScreen(
                                 )
                                 OutlinedTextField(
                                     value = gatewayPort,
-                                    onValueChange = { gatewayPort = it.filter { char -> char.isDigit() }; testResult = null },
+                                    onValueChange = { gatewayPort = it.filter { char -> char.isDigit() }; testResult = null; gatewayBootstrapToken = "" },
                                     label = { Text(stringResource(R.string.gateway_port)) },
                                     modifier = Modifier.weight(1f),
                                     singleLine = true,
@@ -760,7 +760,7 @@ fun SettingsScreen(
                                 }
                                 Switch(
                                     checked = gatewayTls,
-                                    onCheckedChange = { gatewayTls = it; testResult = null }
+                                    onCheckedChange = { gatewayTls = it; testResult = null; gatewayBootstrapToken = "" }
                                 )
                             }
                         } else if (selectedTabIndex == 1) {
