@@ -589,15 +589,24 @@ internal fun messageIdentityKey(message: ChatMessage): String? {
   if (role.isEmpty()) return null
 
   val timestamp = message.timestampMs?.toString().orEmpty()
-  val contentFingerprint =
-    message.content.joinToString(separator = "\u001E") { part ->
-      val type = part.type.trim().lowercase()
-      val text = part.text?.trim().orEmpty()
-      val mime = part.mimeType?.trim()?.lowercase().orEmpty()
-      val name = part.fileName?.trim().orEmpty()
-      val base64Hash = part.base64?.hashCode()?.toString().orEmpty()
-      "$type\u001F$text\u001F$mime\u001F$name\u001F$base64Hash"
-    }
+  // ⚡ Bolt Optimization: Replaced joinToString with manual StringBuilder logic to avoid string intermediate object creation and collection allocation pressure
+  val fingerprintBuilder = StringBuilder()
+  for (i in message.content.indices) {
+    if (i > 0) fingerprintBuilder.append("\u001E")
+    val part = message.content[i]
+    val type = part.type.trim().lowercase()
+    val text = part.text?.trim().orEmpty()
+    val mime = part.mimeType?.trim()?.lowercase().orEmpty()
+    val name = part.fileName?.trim().orEmpty()
+    val base64Hash = part.base64?.hashCode()?.toString().orEmpty()
+
+    fingerprintBuilder.append(type).append("\u001F")
+                      .append(text).append("\u001F")
+                      .append(mime).append("\u001F")
+                      .append(name).append("\u001F")
+                      .append(base64Hash)
+  }
+  val contentFingerprint = fingerprintBuilder.toString()
 
   if (timestamp.isEmpty() && contentFingerprint.isEmpty()) return null
   return "$role|$timestamp|$contentFingerprint"
