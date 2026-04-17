@@ -158,23 +158,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         refreshAllPermissionsStatus()
     }
 
-    override fun attachBaseContext(newBase: Context) {
-        // ComponentActivity does not participate in AppCompat's locale delegation,
-        // so we must manually apply the saved locale here. This guarantees every
-        // new instance (whether created by recreate() or a system config change)
-        // immediately has the correct locale without relying on timing.
-        val tag = try {
-            SettingsRepository.getInstance(newBase).appLanguage.trim()
-        } catch (e: Exception) { "" }
-        if (tag.isNotBlank()) {
-            val locale = java.util.Locale.forLanguageTag(tag)
-            val config = android.content.res.Configuration(newBase.resources.configuration)
-            config.setLocale(locale)
-            super.attachBaseContext(newBase.createConfigurationContext(config))
-        } else {
-            super.attachBaseContext(newBase)
-        }
-    }
     private fun handleIntent(intent: Intent?) {
         if (intent?.action == "com.openclaw.assistant.action.ASK_OPENCLAW") {
             val prompt = intent.getStringExtra("prompt")
@@ -418,22 +401,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         refreshMissingPermissions()
         refreshAllPermissionsStatus()
 
-        // Detect app language change made in SettingsActivity and recreate to apply it.
-        // attachBaseContext() ensures the new instance always gets the correct locale,
-        // so a single recreate() is always sufficient (no guard needed).
-        // When savedTag is blank (System Default), compare against Locale.getDefault()
-        // so that reverting from e.g. zh-CN back to system locale also triggers recreate.
-        val savedTag = SettingsRepository.getInstance(this).appLanguage.trim()
-        val displayedLanguage = resources.configuration.locales[0].language
-        val expectedLanguage = if (savedTag.isNotBlank()) {
-            java.util.Locale.forLanguageTag(savedTag).language
-        } else {
-            java.util.Locale.getDefault().language
-        }
-        if (displayedLanguage != expectedLanguage) {
-            recreate()
-            return
-        }
     }
 
     override fun onDestroy() {
@@ -640,27 +607,6 @@ fun MainScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
-    // Check for updates on startup
-    LaunchedEffect(Unit) {
-        try {
-            val versionName = context.packageManager.getPackageInfo(context.packageName, 0).versionName
-            val info = com.openclaw.assistant.utils.UpdateChecker.checkUpdate(versionName ?: "")
-            if (info != null && info.hasUpdate) {
-                val result = snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.update_available, info.latestVersion),
-                    actionLabel = context.getString(R.string.update_action),
-                    duration = SnackbarDuration.Indefinite
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.downloadUrl))
-                    context.startActivity(intent)
-                }
-            }
-        } catch (e: Exception) {
-            // Ignore startup update check errors
         }
     }
 

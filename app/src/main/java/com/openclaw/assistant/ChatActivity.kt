@@ -110,20 +110,6 @@ class ChatActivity : ComponentActivity() {
         }
     }
 
-    override fun attachBaseContext(newBase: Context) {
-        val tag = try {
-            SettingsRepository.getInstance(newBase).appLanguage.trim()
-        } catch (e: Exception) { "" }
-        if (tag.isNotBlank()) {
-            val locale = java.util.Locale.forLanguageTag(tag)
-            val config = android.content.res.Configuration(newBase.resources.configuration)
-            config.setLocale(locale)
-            super.attachBaseContext(newBase.createConfigurationContext(config))
-        } else {
-            super.attachBaseContext(newBase)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settings = SettingsRepository.getInstance(this)

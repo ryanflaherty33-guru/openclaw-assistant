@@ -1,6 +1,7 @@
 package com.openclaw.assistant.gateway
 
 import android.util.Log
+import com.openclaw.assistant.diagnostics.ConnectionDebugLogger
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -181,12 +182,14 @@ class GatewaySession(
     tls: GatewayTlsParams? = null,
   ) {
     desired = DesiredConnection(endpoint, token, password, bootstrapToken, options, tls)
+    ConnectionDebugLogger.log("Gateway", "connect() called: ${endpoint.host}:${endpoint.port} tls=${tls != null}")
     if (job == null) {
       job = scope.launch(Dispatchers.IO) { runLoop() }
     }
   }
 
   fun disconnect() {
+    ConnectionDebugLogger.log("Gateway", "disconnect() called")
     desired = null
     currentConnection?.closeQuietly()
     scope.launch(Dispatchers.IO) {
@@ -290,7 +293,9 @@ class GatewaySession(
       val scheme = if (tls != null) "wss" else "ws"
       val url = "$scheme://${endpoint.host}:${endpoint.port}"
       val httpScheme = if (tls != null) "https" else "http"
-      val origin = "$httpScheme://${endpoint.host}:${endpoint.port}"
+      // Use localhost origin to match gateway's default CORS allowlist.
+      // The gateway only whitelists localhost origins by default.
+      val origin = "$httpScheme://localhost:18789"
       val request = Request.Builder()
         .url(url)
         .header("Origin", origin)
@@ -383,11 +388,13 @@ class GatewaySession(
         if (isClosed.compareAndSet(false, true)) {
           failPending()
           closedDeferred.complete(Unit)
+          ConnectionDebugLogger.log("Gateway", "WebSocket failure: ${t::class.java.simpleName}: ${t.message}")
           onDisconnected("Gateway error: ${t.message ?: t::class.java.simpleName}")
         }
       }
 
       override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+        ConnectionDebugLogger.log("Gateway", "WebSocket closed: code=$code reason=$reason")
         if (!connectDeferred.isCompleted) {
           connectDeferred.completeExceptionally(IllegalStateException("Gateway closed: $reason"))
         }
@@ -525,6 +532,7 @@ class GatewaySession(
         obj["snapshot"].asObjectOrNull()
           ?.get("sessionDefaults").asObjectOrNull()
       mainSessionKey = sessionDefaults?.get("mainSessionKey").asStringOrNull()
+      ConnectionDebugLogger.log("Gateway", "Connected: server=$serverName addr=$remoteAddress ver=$serverVersion")
       onConnected(serverName, remoteAddress, serverVersion, mainSessionKey)
       connectDeferred.complete(Unit)
     }
@@ -779,13 +787,16 @@ class GatewaySession(
       }
 
       try {
+        ConnectionDebugLogger.log("Gateway", if (attempt == 0) "Connecting to ${target.endpoint.host}:${target.endpoint.port}…" else "Reconnecting (attempt $attempt)…")
         onDisconnected(if (attempt == 0) "Connecting…" else "Reconnecting…")
         connectOnce(target)
         attempt = 0
       } catch (err: Throwable) {
         attempt += 1
+        ConnectionDebugLogger.log("Gateway", "Connection error (attempt $attempt): ${err::class.java.simpleName}: ${err.message}")
         onDisconnected("Gateway error: ${err.message ?: err::class.java.simpleName}")
         val sleepMs = minOf(8_000L, (350.0 * Math.pow(1.7, attempt.toDouble())).toLong())
+        ConnectionDebugLogger.log("Gateway", "Retrying in ${sleepMs}ms…")
         delay(sleepMs)
       }
     }

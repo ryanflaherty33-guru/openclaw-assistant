@@ -26,7 +26,7 @@ class TTSManager(private val context: Context) {
         providers[TTSProviderType.LOCAL] = AndroidTTSProvider(context)
         providers[TTSProviderType.ELEVENLABS] = ElevenLabsProvider(context)
         providers[TTSProviderType.OPENAI] = OpenAIProvider(context)
-        if (BuildConfig.FLAVOR == "full") {
+        if (BuildConfig.VOICEVOX_ENABLED) {
             providers[TTSProviderType.VOICEVOX] = VoiceVoxProvider(context)
         }
     }
@@ -148,7 +148,7 @@ class TTSManager(private val context: Context) {
         providers[TTSProviderType.LOCAL] = AndroidTTSProvider(context)
         providers[TTSProviderType.ELEVENLABS] = ElevenLabsProvider(context)
         providers[TTSProviderType.OPENAI] = OpenAIProvider(context)
-        if (BuildConfig.FLAVOR == "full") {
+        if (BuildConfig.VOICEVOX_ENABLED) {
             providers[TTSProviderType.VOICEVOX] = VoiceVoxProvider(context)
         }
     }
@@ -159,7 +159,7 @@ class TTSManager(private val context: Context) {
      */
     fun initializeCurrentProvider(): Boolean {
         val provider = getCurrentProvider()
-        return if (BuildConfig.FLAVOR == "full" && provider is VoiceVoxProvider) {
+        return if (BuildConfig.VOICEVOX_ENABLED && provider is VoiceVoxProvider) {
             provider.initialize()
         } else {
             true // Other providers don't need explicit initialization

@@ -3,8 +3,7 @@ package com.openclaw.assistant.gateway
 import android.content.Context
 import android.util.Base64
 import android.util.Log
-import com.openclaw.assistant.BuildConfig
-import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.openclaw.assistant.diagnostics.ConnectionDebugLogger
 import com.google.crypto.tink.CleartextKeysetHandle
 import com.google.crypto.tink.JsonKeysetWriter
 import com.google.crypto.tink.KeyTemplates
@@ -17,7 +16,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
-class DeviceIdentity(context: Context) {
+class DeviceIdentity(private val context: Context) {
 
     companion object {
         private const val TAG = "DeviceIdentity"
@@ -33,87 +32,172 @@ class DeviceIdentity(context: Context) {
         private set
 
     init {
+        val L = ConnectionDebugLogger
+        L.log("Identity", "=== INIT START ===")
+
+        // ── Step 1: Try pure BouncyCastle first (no Tink, no Android Keystore) ──
         try {
-            SignatureConfig.register()
+            L.log("Identity", "Step 1: Pure BC keygen...")
 
-            val manager = AndroidKeysetManager.Builder()
-                .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
-                .withKeyTemplate(KeyTemplates.get("ED25519WithRawOutput"))
-                .withMasterKeyUri(MASTER_KEY_URI)
-                .build()
+            // Ensure BC provider is available
+            val bcProviders = java.security.Security.getProviders()
+                .filter { it.name.contains("BC", ignoreCase = true) }
+            L.log("Identity", "Step 1a: BC providers found: ${bcProviders.map { it.name }}")
 
-            val handle = manager.keysetHandle
-            signer = handle.getPrimitive(PublicKeySign::class.java)
-
-            extractPublicKey(handle)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize: ${e.message}")
-            if (BuildConfig.FIREBASE_ENABLED) {
-                FirebaseCrashlytics.getInstance().recordException(e)
+            if (bcProviders.isEmpty()) {
+                L.log("Identity", "Step 1b: Registering BC provider...")
+                val bcProvider = Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider")
+                    .getDeclaredConstructor().newInstance() as java.security.Provider
+                java.security.Security.insertProviderAt(bcProvider, 1)
+                L.log("Identity", "Step 1b: BC provider registered")
             }
+
+            // Check for existing saved BC keys
+            L.log("Identity", "Step 1c: Checking SharedPrefs for saved keys...")
+            val prefs = context.getSharedPreferences("anvil_bc_identity", Context.MODE_PRIVATE)
+            L.log("Identity", "Step 1c: Got SharedPrefs OK")
+            val existingPub = prefs.getString("pub", null)
+            val existingPriv = prefs.getString("priv", null)
+            L.log("Identity", "Step 1d: existingPub=${existingPub != null}, existingPriv=${existingPriv != null}")
+
+            val finalPubKey: ByteArray
+            val finalPrivKey: org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+
+            if (existingPub != null && existingPriv != null) {
+                L.log("Identity", "Step 1e: Restoring saved keys...")
+                finalPubKey = Base64.decode(existingPub, Base64.NO_WRAP)
+                L.log("Identity", "Step 1e: Decoded pub key, size=${finalPubKey.size}")
+                val privBytes = Base64.decode(existingPriv, Base64.NO_WRAP)
+                L.log("Identity", "Step 1e: Decoded priv key, size=${privBytes.size}")
+                finalPrivKey = org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters(privBytes, 0)
+                L.log("Identity", "Step 1e: Restored keys OK")
+            } else {
+                L.log("Identity", "Step 1e: Generating new Ed25519 keypair...")
+                val kpg = org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator()
+                L.log("Identity", "Step 1e: Created generator")
+                kpg.init(org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters(java.security.SecureRandom()))
+                L.log("Identity", "Step 1e: Initialized generator")
+                val keyPair = kpg.generateKeyPair()
+                L.log("Identity", "Step 1e: Generated keypair")
+                val pubKey = keyPair.public as org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+                finalPrivKey = keyPair.private as org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+                finalPubKey = pubKey.encoded
+                L.log("Identity", "Step 1e: pubKey size=${finalPubKey.size}")
+
+                // Persist
+                L.log("Identity", "Step 1f: Saving keys to SharedPrefs...")
+                prefs.edit()
+                    .putString("pub", Base64.encodeToString(finalPubKey, Base64.NO_WRAP))
+                    .putString("priv", Base64.encodeToString(finalPrivKey.encoded, Base64.NO_WRAP))
+                    .apply()
+                L.log("Identity", "Step 1f: Keys saved")
+            }
+
+            // Set signer
+            L.log("Identity", "Step 1g: Creating BC signer...")
+            signer = BouncyCastleSigner(finalPrivKey)
+            L.log("Identity", "Step 1g: Signer created")
+
+            // Derive identity
+            L.log("Identity", "Step 1h: Deriving identity from pub key...")
+            publicKeyBase64Url = Base64.encodeToString(
+                finalPubKey,
+                Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+            )
+            L.log("Identity", "Step 1h: publicKeyBase64Url=${publicKeyBase64Url?.take(20)}...")
+
+            val digest = MessageDigest.getInstance("SHA-256")
+            val hash = digest.digest(finalPubKey)
+            deviceId = bytesToHex(hash)
+            L.log("Identity", "Step 1h: deviceId=${deviceId?.take(16)}...")
+
+            // Verify signer works
+            L.log("Identity", "Step 1i: Test signing...")
+            val testSig = signer?.sign("test".toByteArray())
+            L.log("Identity", "Step 1i: Test sign OK, sig size=${testSig?.size}")
+
+            L.log("Identity", "=== INIT SUCCESS (BC) === deviceId=${deviceId?.take(16)}...")
+
+        } catch (e: Throwable) {
+            L.log("Identity", "Step 1 FAILED: ${e::class.java.simpleName}: ${e.message}")
+            Log.e(TAG, "BC identity init failed", e)
+
+            // ── Step 2: Try Tink as fallback ──
+            try {
+                L.log("Identity", "Step 2: Trying Tink fallback...")
+                SignatureConfig.register()
+                L.log("Identity", "Step 2a: SignatureConfig registered")
+                val manager = AndroidKeysetManager.Builder()
+                    .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
+                    .withKeyTemplate(KeyTemplates.get("ED25519WithRawOutput"))
+                    .withMasterKeyUri(MASTER_KEY_URI)
+                    .build()
+                L.log("Identity", "Step 2b: KeysetManager built")
+                val handle = manager.keysetHandle
+                L.log("Identity", "Step 2c: Got handle")
+                signer = handle.getPrimitive(PublicKeySign::class.java)
+                L.log("Identity", "Step 2d: Got signer")
+                extractPublicKeyViaTink(handle)
+                L.log("Identity", "=== INIT SUCCESS (Tink) === deviceId=${deviceId?.take(16)}...")
+            } catch (e2: Throwable) {
+                L.log("Identity", "Step 2 ALSO FAILED: ${e2::class.java.simpleName}: ${e2.message}")
+                Log.e(TAG, "All identity init methods failed", e2)
+            }
+        }
+
+        L.log("Identity", "=== INIT END === deviceId=${deviceId ?: "NULL"}, pubKey=${publicKeyBase64Url?.take(10) ?: "NULL"}, signer=${if (signer != null) "OK" else "NULL"}")
+    }
+
+    private class BouncyCastleSigner(
+        private val privateKey: org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+    ) : PublicKeySign {
+        override fun sign(data: ByteArray): ByteArray {
+            val s = org.bouncycastle.crypto.signers.Ed25519Signer()
+            s.init(true, privateKey)
+            s.update(data, 0, data.size)
+            return s.generateSignature()
         }
     }
 
-    private fun extractPublicKey(handle: KeysetHandle) {
-        try {
-            val publicHandle = handle.getPublicKeysetHandle()
-            val outputStream = ByteArrayOutputStream()
-            // Using CleartextKeysetHandle to export public key is safe and necessary here
-            // because we need the raw key bytes for the protocol, not just a Tink primitive.
-            CleartextKeysetHandle.write(
-                publicHandle, 
-                JsonKeysetWriter.withOutputStream(outputStream)
-            )
-            
-            val jsonStr = outputStream.toString("UTF-8")
-            val json = JSONObject(jsonStr)
-            val keys = json.getJSONArray("key")
-            
-            if (keys.length() > 0) {
-                // Find the primary key if possible, or just take the first one
-                val primaryKeyId = json.optLong("primaryKeyId")
-                var keyObj: JSONObject? = null
-                
-                for (i in 0 until keys.length()) {
-                    val k = keys.getJSONObject(i)
-                    if (k.optLong("keyId") == primaryKeyId) {
-                        keyObj = k
-                        break
-                    }
-                }
-                if (keyObj == null) keyObj = keys.getJSONObject(0)
+    private fun extractPublicKeyViaTink(handle: KeysetHandle) {
+        val publicHandle = handle.getPublicKeysetHandle()
+        val outputStream = ByteArrayOutputStream()
+        CleartextKeysetHandle.write(
+            publicHandle,
+            JsonKeysetWriter.withOutputStream(outputStream)
+        )
 
-                val keyData = keyObj!!.getJSONObject("keyData")
-                val typeUrl = keyData.getString("typeUrl")
-                
-                if (typeUrl.endsWith("Ed25519PublicKey")) {
-                    val valBase64 = keyData.getString("value")
-                    val protoBytes = Base64.decode(valBase64, Base64.DEFAULT)
-                    
-                    // Ed25519PublicKey proto: [08 00 12 20 <32 bytes>]
-                    // We need the last 32 bytes
-                    if (protoBytes.size >= 32) {
-                         val rawKey = protoBytes.copyOfRange(protoBytes.size - 32, protoBytes.size)
-                         
-                         // Base64Url encode without padding for transport
-                         publicKeyBase64Url = Base64.encodeToString(
-                             rawKey, 
-                             Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
-                         )
-                         
-                         // Device ID is SHA-256 of raw public key
-                         val digest = MessageDigest.getInstance("SHA-256")
-                         val hash = digest.digest(rawKey)
-                         deviceId = bytesToHex(hash)
-                         
-                         Log.d(TAG, "Initialized deviceId=$deviceId")
-                    }
+        val jsonStr = outputStream.toString("UTF-8")
+        val json = JSONObject(jsonStr)
+        val keys = json.getJSONArray("key")
+
+        if (keys.length() > 0) {
+            val primaryKeyId = json.optLong("primaryKeyId")
+            var keyObj: JSONObject? = null
+
+            for (i in 0 until keys.length()) {
+                val k = keys.getJSONObject(i)
+                if (k.optLong("keyId") == primaryKeyId) {
+                    keyObj = k
+                    break
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to extract public key: ${e.message}")
-            if (BuildConfig.FIREBASE_ENABLED) {
-                FirebaseCrashlytics.getInstance().recordException(e)
+            if (keyObj == null) keyObj = keys.getJSONObject(0)
+
+            val keyData = keyObj!!.getJSONObject("keyData")
+            val valBase64 = keyData.getString("value")
+            if (valBase64 != null && valBase64.isNotEmpty()) {
+                val protoBytes = Base64.decode(valBase64, Base64.DEFAULT)
+                if (protoBytes != null && protoBytes.size >= 32) {
+                    val rawKey = protoBytes.copyOfRange(protoBytes.size - 32, protoBytes.size)
+                    publicKeyBase64Url = Base64.encodeToString(
+                        rawKey,
+                        Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+                    )
+                    val digest = MessageDigest.getInstance("SHA-256")
+                    val hash = digest.digest(rawKey)
+                    deviceId = bytesToHex(hash)
+                }
             }
         }
     }
@@ -127,13 +211,10 @@ class DeviceIdentity(context: Context) {
             )
         } catch (e: Exception) {
             Log.e(TAG, "Sign failed: ${e.message}")
-            if (BuildConfig.FIREBASE_ENABLED) {
-                FirebaseCrashlytics.getInstance().recordException(e)
-            }
             null
         }
     }
-    
+
     fun buildAuthPayload(
         clientId: String,
         clientMode: String,
@@ -192,19 +273,14 @@ class DeviceIdentity(context: Context) {
         return value.filter { it.code in 0x20..0x7E }.lowercase()
     }
 
-    private val HEX_CHARS = "0123456789abcdef".toCharArray()
-
-    // ⚡ Bolt Optimization: Replaced `joinToString("") { "%02x".format(it) }`
-    // with a manual CharArray approach. Reduces byte-to-hex formatting time by ~26x
-    // (e.g., 690ms -> 26ms for 1000 iterations of 1KB arrays) and eliminates
-    // massive garbage collector pressure caused by per-byte string/lambda allocations.
     private fun bytesToHex(bytes: ByteArray): String {
-        val hexChars = CharArray(bytes.size * 2)
+        val chars = "0123456789abcdef".toCharArray()
+        val result = CharArray(bytes.size * 2)
         for (i in bytes.indices) {
             val v = bytes[i].toInt() and 0xFF
-            hexChars[i * 2] = HEX_CHARS[v ushr 4]
-            hexChars[i * 2 + 1] = HEX_CHARS[v and 0x0F]
+            result[i * 2] = chars[v ushr 4]
+            result[i * 2 + 1] = chars[v and 0x0F]
         }
-        return String(hexChars)
+        return String(result)
     }
 }

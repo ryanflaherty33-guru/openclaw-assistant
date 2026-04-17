@@ -120,6 +120,12 @@
             android:exported="false"
             android:theme="@style/Theme.OpenClawAssistant" />
 
+        <!-- Diagnostics Activity -->
+        <activity
+            android:name="com.openclaw.assistant.diagnostics.DiagnosticsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenClawAssistant" />
+
         <!-- Session List Activity -->
         <activity
             android:name="com.openclaw.assistant.SessionListActivity"

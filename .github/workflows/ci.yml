@@ -7,13 +7,7 @@ on:
 permissions:
   contents: read
 
-# Shared setup steps are duplicated intentionally across jobs to keep each
-# job self-contained and allow lint + build to run in parallel.
-
 jobs:
-  # ── Lint ──────────────────────────────────────────────────────────────────
-  # Checks only the standard/debug variant to avoid running lint on every
-  # flavor+buildType combination (which quadruples the time).
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -28,50 +22,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup google-services.json
-        env:
-          DEBUG_GOOGLE_SERVICES_JSON: ${{ secrets.DEBUG_GOOGLE_SERVICES_JSON }}
-        run: |
-          if [ -n "$DEBUG_GOOGLE_SERVICES_JSON" ]; then
-            echo "$DEBUG_GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
-          else
-            cat > app/google-services.json << 'EOT'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "mock-project-id",
-              "storage_bucket": "mock-project-id.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000001",
-                  "android_client_info": {
-                    "package_name": "com.openclaw.assistant.debug"
-                  }
-                },
-                "api_key": [{ "current_key": "mock-api-key" }],
-                "services": { "analytics_service": { "status": 1 }, "appinvite_service": { "status": 1, "other_platform_oauth_client": [] }, "ads_service": { "status": 2 } }
-              }
-            ],
-            "configuration_version": "1"
-          }
-          EOT
-          fi
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run Lint (standard/debug only)
-        run: ./gradlew lintStandardDebug
+      - name: Run Lint
+        run: ./gradlew lintDebug
 
-  # ── Unit Tests ────────────────────────────────────────────────────────────
-  # Runs the standard/debug unit tests with the checked-in Firebase stub so
-  # contributors can reproduce the exact command locally.
   unit-test:
     runs-on: ubuntu-latest
-    env:
-      FIREBASE_ENABLED: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -84,18 +42,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup google-services.json
-        run: cp app/google-services.json.example app/google-services.json
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run Unit Tests (standard/debug)
-        run: ./gradlew clean testStandardDebugUnitTest
+      - name: Run Unit Tests
+        run: ./gradlew clean testDebugUnitTest
 
-  # ── Build APKs ────────────────────────────────────────────────────────────
-  # Builds Standard and Full debug APKs. Using --parallel lets Gradle compile
-  # the two flavors concurrently within the same job.
   build:
     runs-on: ubuntu-latest
     steps:
@@ -116,10 +68,8 @@ jobs:
         run: |
           mkdir -p ~/.android
           if [ -n "$DEBUG_KEYSTORE_B64" ]; then
-            # Own-repo PR: use shared keystore so APKs from different PRs share the same signature
             echo "$DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
           else
-            # Fork PR: generate a temporary keystore (expected – forks can't share secrets)
             keytool -genkey -v \
               -keystore ~/.android/debug.keystore \
               -storepass android \
@@ -130,55 +80,14 @@ jobs:
               -noprompt
           fi
 
-      - name: Setup google-services.json
-        env:
-          DEBUG_GOOGLE_SERVICES_JSON: ${{ secrets.DEBUG_GOOGLE_SERVICES_JSON }}
-        run: |
-          if [ -n "$DEBUG_GOOGLE_SERVICES_JSON" ]; then
-            # Own-repo PR: use real Firebase config so the APK works on device
-            echo "FIREBASE_ENABLED=true" >> $GITHUB_ENV
-            echo "$DEBUG_GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
-          else
-            # Fork PR: use stub config; Firebase will be disabled at runtime
-            echo "FIREBASE_ENABLED=false" >> $GITHUB_ENV
-            cat > app/google-services.json << 'EOT'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "mock-project-id",
-              "storage_bucket": "mock-project-id.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000001",
-                  "android_client_info": {
-                    "package_name": "com.openclaw.assistant.debug"
-                  }
-                },
-                "api_key": [{ "current_key": "mock-api-key" }],
-                "services": { "analytics_service": { "status": 1 }, "appinvite_service": { "status": 1, "other_platform_oauth_client": [] }, "ads_service": { "status": 2 } }
-              }
-            ],
-            "configuration_version": "1"
-          }
-          EOT
-          fi
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build Debug APKs (Standard & Full)
-        run: ./gradlew assembleStandardDebug assembleFullDebug --parallel
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
-      - name: Upload Standard Debug APK
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: app/build/outputs/apk/standard/debug/*.apk
-
-      - name: Upload Full (VOICEVOX) Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-apk-in-VOICEVOX
-          path: app/build/outputs/apk/full/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk

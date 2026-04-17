@@ -196,20 +196,6 @@ class SettingsActivity : ComponentActivity() {
 
     private lateinit var settings: SettingsRepository
 
-    override fun attachBaseContext(newBase: Context) {
-        val tag = try {
-            SettingsRepository.getInstance(newBase).appLanguage.trim()
-        } catch (e: Exception) { "" }
-        if (tag.isNotBlank()) {
-            val locale = java.util.Locale.forLanguageTag(tag)
-            val config = android.content.res.Configuration(newBase.resources.configuration)
-            config.setLocale(locale)
-            super.attachBaseContext(newBase.createConfigurationContext(config))
-        } else {
-            super.attachBaseContext(newBase)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settings = SettingsRepository.getInstance(this)
@@ -257,8 +243,6 @@ fun SettingsScreen(
     var customWakeWord by rememberSaveable { mutableStateOf(settings.customWakeWord) }
     var wakeWordSensitivity by rememberSaveable { mutableStateOf(settings.wakeWordSensitivity) }
     var speechSilenceTimeout by rememberSaveable { mutableStateOf(settings.speechSilenceTimeout.toFloat().coerceIn(5000f, 30000f)) }
-    var speechLanguage by rememberSaveable { mutableStateOf(settings.speechLanguage) }
-    var appLanguage by rememberSaveable { mutableStateOf(settings.appLanguage) }
     var thinkingSoundEnabled by rememberSaveable { mutableStateOf(settings.thinkingSoundEnabled) }
     var fillerPhrasesEnabled by rememberSaveable { mutableStateOf(settings.fillerPhrasesEnabled) }
     var ttsBargeInEnabled by rememberSaveable { mutableStateOf(settings.ttsBargeInEnabled) }
@@ -267,8 +251,6 @@ fun SettingsScreen(
 
     var showAuthToken by rememberSaveable { mutableStateOf(false) }
     var showWakeWordMenu by rememberSaveable { mutableStateOf(false) }
-    var showLanguageMenu by rememberSaveable { mutableStateOf(false) }
-    var showDisplayLanguageMenu by rememberSaveable { mutableStateOf(false) }
     var wakewordConnectionType by rememberSaveable { mutableStateOf(settings.wakewordConnectionType) }
 
     val scope = rememberCoroutineScope()
@@ -375,34 +357,6 @@ fun SettingsScreen(
         }
     }
 
-    // Speech recognition language options - loaded dynamically from device
-    var speechLanguageOptions by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-    var isLoadingLanguages by remember { mutableStateOf(true) }
-
-    LaunchedEffect(Unit) {
-        isLoadingLanguages = true
-        val deviceLanguages = com.openclaw.assistant.speech.SpeechLanguageUtils
-            .getAvailableLanguages(context)
-
-        val mergedLanguages = linkedMapOf<String, String>()
-        deviceLanguages?.forEach { info ->
-            mergedLanguages[info.tag] = info.displayName
-        }
-        FALLBACK_SPEECH_LANGUAGES.forEach { (tag, label) ->
-            mergedLanguages.putIfAbsent(tag, label)
-        }
-
-        speechLanguageOptions = buildList {
-            add("" to context.getString(R.string.speech_language_system_default))
-            addAll(
-                mergedLanguages
-                    .map { it.key to it.value }
-                    .sortedBy { it.second }
-            )
-        }
-        isLoadingLanguages = false
-    }
-
     // Wake word options
     val wakeWordOptions = listOf(
         SettingsRepository.WAKE_WORD_OPEN_CLAW to stringResource(R.string.wake_word_openclaw),
@@ -483,14 +437,11 @@ fun SettingsScreen(
                             settings.wakeWordSensitivity = wakeWordSensitivity
                             settings.wakewordConnectionType = wakewordConnectionType
                             settings.speechSilenceTimeout = speechSilenceTimeout.toLong()
-                            settings.speechLanguage = speechLanguage
-                            settings.appLanguage = appLanguage
                             settings.thinkingSoundEnabled = thinkingSoundEnabled
                             settings.fillerPhrasesEnabled = fillerPhrasesEnabled
                             settings.ttsBargeInEnabled = ttsBargeInEnabled
                             settings.wakeWordDebugEnabled = wakeWordDebugEnabled
                             settings.mediaButtonEnabled = mediaButtonEnabled
-                            applyAppLanguage(appLanguage)
 
                             // Stop/Restart services
                             HotwordService.stop(context)
@@ -1518,145 +1469,35 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // === LANGUAGE SECTION ===
-            CollapsibleSection(title = stringResource(R.string.language_section)) {
-
-            // --- Display Language card ---
+            // === DIAGNOSTICS ===
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        context.startActivity(
+                            android.content.Intent(context, com.openclaw.assistant.diagnostics.DiagnosticsActivity::class.java)
+                        )
+                    },
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.display_language_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    ExposedDropdownMenuBox(
-                        expanded = showDisplayLanguageMenu,
-                        onExpandedChange = { showDisplayLanguageMenu = it }
-                    ) {
-                        val currentLabel = if (appLanguage.isEmpty()) {
-                            stringResource(R.string.display_language_system_default)
-                        } else {
-                            DISPLAY_LANGUAGE_OPTIONS.find { it.first == appLanguage }?.second ?: appLanguage
-                        }
-
-                        OutlinedTextField(
-                            value = currentLabel,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.display_language_label)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showDisplayLanguageMenu) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.BugReport, contentDescription = null)
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text("Diagnostics", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Connection logs, network tests, device identity",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
-
-                        ExposedDropdownMenu(
-                            expanded = showDisplayLanguageMenu,
-                            onDismissRequest = { showDisplayLanguageMenu = false }
-                        ) {
-                            DISPLAY_LANGUAGE_OPTIONS.forEach { (tag, label) ->
-                                DropdownMenuItem(
-                                    text = { Text(label) },
-                                    onClick = {
-                                        appLanguage = tag
-                                        showDisplayLanguageMenu = false
-                                    },
-                                    leadingIcon = {
-                                        if (appLanguage == tag) {
-                                            Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                        }
-                                    }
-                                )
-                            }
-                        }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // --- Speech Language card ---
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.speech_language_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (isLoadingLanguages) {
-                        OutlinedTextField(
-                            value = stringResource(R.string.speech_language_loading),
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.speech_language_label)) },
-                            trailingIcon = {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        ExposedDropdownMenuBox(
-                            expanded = showLanguageMenu,
-                            onExpandedChange = { showLanguageMenu = it }
-                        ) {
-                            val currentLabel = if (speechLanguage.isEmpty()) {
-                                stringResource(R.string.speech_language_system_default)
-                            } else {
-                                speechLanguageOptions.find { it.first == speechLanguage }?.second
-                                    ?: speechLanguage
-                            }
-
-                            OutlinedTextField(
-                                value = currentLabel,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text(stringResource(R.string.speech_language_label)) },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showLanguageMenu) },
-                                modifier = Modifier.fillMaxWidth().menuAnchor()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = showLanguageMenu,
-                                onDismissRequest = { showLanguageMenu = false }
-                            ) {
-                                speechLanguageOptions.forEach { (tag, label) ->
-                                    DropdownMenuItem(
-                                        text = { Text(label) },
-                                        onClick = {
-                                            speechLanguage = tag
-                                            showLanguageMenu = false
-                                        },
-                                        leadingIcon = {
-                                            if (speechLanguage == tag) {
-                                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            } // end CollapsibleSection for Language
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -1785,72 +1626,6 @@ data class TestResult(
     val message: String
 )
 
-private fun applyAppLanguage(languageTag: String) {
-    val locales = if (languageTag.isBlank()) {
-        LocaleListCompat.getEmptyLocaleList()
-    } else {
-        LocaleListCompat.forLanguageTags(languageTag)
-    }
-    AppCompatDelegate.setApplicationLocales(locales)
-}
-
-private val DISPLAY_LANGUAGE_OPTIONS = listOf(
-    "" to "System Default",
-    "en" to "English",
-    "ja-JP" to "Japan（日本）",
-    "zh-CN" to "China（中国）",
-    "zh-TW" to "Taiwan（台灣）",
-    "hi-IN" to "India（भारत）",
-    "de-DE" to "Germany（Deutschland）",
-    "de-AT" to "Austria（Österreich）",
-    "ru-RU" to "Russia（Россия）",
-    "fr" to "Français",
-    "es" to "Español"
-)
-
-// Fallback language list used when device query fails
-private val FALLBACK_SPEECH_LANGUAGES = listOf(
-    "en-US" to "English (US)",
-    "en-GB" to "English (UK)",
-    "en-AU" to "English (Australia)",
-    "en-CA" to "English (Canada)",
-    "en-IN" to "English (India)",
-    "ja-JP" to "日本語",
-    "zh-CN" to "中文 (简体)",
-    "zh-TW" to "中文 (繁體)",
-    "zh-HK" to "中文 (香港)",
-    "hi-IN" to "हिन्दी",
-    "de-DE" to "Deutsch (Deutschland)",
-    "de-AT" to "Deutsch (Österreich)",
-    "ru-RU" to "Русский",
-    "fr-FR" to "Français (France)",
-    "fr-CA" to "Français (Canada)",
-    "es-ES" to "Español (España)",
-    "es-MX" to "Español (México)",
-    "pt-BR" to "Português (Brasil)",
-    "pt-PT" to "Português (Portugal)",
-    "it-IT" to "Italiano (Italia)",
-    "ko-KR" to "한국어",
-    "ar-SA" to "العربية (السعودية)",
-    "tr-TR" to "Türkçe",
-    "nl-NL" to "Nederlands",
-    "pl-PL" to "Polski",
-    "sv-SE" to "Svenska",
-    "no-NO" to "Norsk",
-    "da-DK" to "Dansk",
-    "fi-FI" to "Suomi",
-    "cs-CZ" to "Čeština",
-    "el-GR" to "Ελληνικά",
-    "he-IL" to "עברית",
-    "id-ID" to "Bahasa Indonesia",
-    "ms-MY" to "Bahasa Melayu",
-    "uk-UA" to "Українська",
-    "ro-RO" to "Română",
-    "hu-HU" to "Magyar",
-    "th-TH" to "ไทย",
-    "vi-VN" to "Tiếng Việt"
-)
-
 // TTS Provider Settings Cards
 
 @Composable
@@ -1878,7 +1653,7 @@ fun ElevenLabsSettingsCard(
     val selectedVoice: ElevenLabsVoiceOptions.VoiceOption = remember(safeVoiceId) {
         ElevenLabsVoiceOptions.VOICES.find { it.id == safeVoiceId } 
             ?: ElevenLabsVoiceOptions.VOICES.firstOrNull()
-            ?: ElevenLabsVoiceOptions.VoiceOption("", "デフォルト", "")
+            ?: ElevenLabsVoiceOptions.VoiceOption("", "Default", "")
     }
     
     // Ensure we have a valid voice name for display

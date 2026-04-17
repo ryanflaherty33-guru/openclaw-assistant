@@ -7,8 +7,6 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-kapt")
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
 }
 
 // Load local.properties
@@ -83,10 +81,8 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             isMinifyEnabled = false
-            // CI sets FIREBASE_ENABLED=false for fork PRs so the APK launches without a real API key.
-            // Defaults to true for local development.
-            val firebaseEnabled = System.getenv("FIREBASE_ENABLED")?.toBooleanStrictOrNull() ?: true
-            buildConfigField("boolean", "FIREBASE_ENABLED", firebaseEnabled.toString())
+            buildConfigField("boolean", "FIREBASE_ENABLED", "false")
+            buildConfigField("boolean", "VOICEVOX_ENABLED", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -94,25 +90,13 @@ android {
         }
         release {
             isMinifyEnabled = true
-            buildConfigField("boolean", "FIREBASE_ENABLED", "true")
+            buildConfigField("boolean", "FIREBASE_ENABLED", "false")
+            buildConfigField("boolean", "VOICEVOX_ENABLED", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-        }
-    }
-    
-    // Product Flavors for VOICEVOX support
-    flavorDimensions += "voicevox"
-    productFlavors {
-        create("standard") {
-            dimension = "voicevox"
-            buildConfigField("boolean", "VOICEVOX_ENABLED", "false")
-        }
-        create("full") {
-            dimension = "voicevox"
-            buildConfigField("boolean", "VOICEVOX_ENABLED", "true")
         }
     }
     compileOptions {
@@ -152,7 +136,7 @@ androidComponents {
             .forEach { output ->
                 val versionName = output.versionName.orNull ?: "0"
                 val buildType = variant.buildType
-                output.outputFileName = "openclaw-${versionName}-${buildType}.apk"
+                output.outputFileName = "anvil-${versionName}-${buildType}.apk"
             }
     }
 }
@@ -195,12 +179,6 @@ dependencies {
     // Vosk
     implementation("com.alphacephei:vosk-android:0.3.75")
     
-    // VOICEVOX (full flavor only)
-    // libvoicevox_onnxruntime.so (VoiceVox custom ORT v1.17.3) is bundled in
-    // app/src/full/jniLibs/arm64-v8a/. The standard Microsoft ORT does not support
-    // the "vv-bin" model format required by voicevox_core 0.16.4.
-    add("fullImplementation", files("libs/voicevoxcore-android-0.16.4.aar"))
-
     // Tink (Crypto)
     implementation("com.google.crypto.tink:tink-android:1.10.0")
 
@@ -250,11 +228,6 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")
-
-    // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-    implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-analytics")
 
     // QR Code Scanning (Google Code Scanner — no camera permission required)
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
